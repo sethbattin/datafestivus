@@ -9,16 +9,15 @@
 namespace DataFestivus\RTCStore;
 
 /**
- * Class Offer - Models the fields required for an RTC offer
+ * Class Connection - Models the fields required for an RTC offer
  * @package RTCStore
  */
-class Offer
+class Connection
 {
     private $name = '';
-    private $candidate = '';
-    private $content = '';
+    private $offer = '';
     private $answer = '';
-    private $used = '';
+    private $candidate = '';
 
     /**
      * @return string
@@ -39,33 +38,17 @@ class Offer
     /**
      * @return string
      */
-    public function getCandidate()
+    public function getOffer()
     {
-        return $this->candidate;
+        return $this->offer;
     }
 
     /**
-     * @param string $candidate
+     * @param string $offer
      */
-    public function setCandidate($candidate)
+    public function setOffer($offer)
     {
-        $this->candidate = $candidate;
-    }
-
-    /**
-     * @return string
-     */
-    public function getContent()
-    {
-        return $this->content;
-    }
-
-    /**
-     * @param string $content
-     */
-    public function setContent($content)
-    {
-        $this->content = $content;
+        $this->offer = $offer;
     }
 
     /**
@@ -85,18 +68,19 @@ class Offer
     }
 
     /**
-     * @return boolean
+     * @return string
      */
-    public function getUsed()
+    public function getCandidate()
     {
-        return $this->used;
+        return $this->candidate;
     }
 
     /**
-     * @param boolean $used
+     * @param string $answerCandidate
      */
-    public function setUsed($used)
+    public function setCandidate($answerCandidate)
     {
-        $this->used = $used;
+        $this->candidate = $answerCandidate;
     }
+    
 }

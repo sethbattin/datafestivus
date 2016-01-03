@@ -36,60 +36,60 @@ class CSV implements RTCStoreInterface
      * @param $name
      * @param $candidate
      * @param $content
-     * @return \DataFestivus\RTCStore\Offer
+     * @return \DataFestivus\RTCStore\Connection
      */
     public function offerCreate($name, $candidate, $content)
     {
-        $offer = new Offer();
-        $offer->setName($name);
-        $offer->setCandidate($candidate);
-        $offer->setContent($content);
-        $this->save($offer);
+        $connection = new Connection();
+        $connection->setName($name);
+        $connection->setOffer($content);
+        $this->save($connection);
     }
 
     /**
      * Answer an existing offer and save it.
-     * @param Offer $offer
-     * @param $answer
+     * @param Connection $connection
+     * @param string $answer
+     * @param string $candidate
      * @return void
      */
-    public function offerAnswer(Offer $offer, $answer)
+    public function offerAnswer(Connection $connection, $answer, $candidate)
     {
+        $connection->setAnswer($answer);
+        $connection->setCandidate($candidate);
         // TODO: Implement offerAnswer() method.
     }
 
     /**
      * Retrieve an RTC offer with the specified name
      * @param $name
-     * @return \DataFestivus\RTCStore\Offer|null 
+     * @return \DataFestivus\RTCStore\Connection|null 
      */
     public function getOffer($name)
     {
         $fh = fopen($this->getStorePath(), 'r');
-        $offer = null;
+        $connection = null;
         while (FALSE !== ($row = fgetcsv($fh))){
-            if ((count($row) == 5) && $row[0] == $name){
-                $offer = new Offer();
-                $offer->setName($row[0]);
-                $offer->setCandidate($row[1]);
-                $offer->setContent($row[2]);
-                $offer->setAnswer($row[3]);
-                $offer->setUsed(!!$row[4]);
+            if ((count($row) == 4) && $row[0] == $name){
+                $connection = new Connection();
+                $connection->setName($row[0]);
+                $connection->setOffer($row[1]);
+                $connection->setAnswer($row[2]);
+                $connection->setCandidate($row[3]);
                 break;
             }
         }
-        return $offer;
+        return $connection;
     }
     
-    private function save(Offer $offer)
+    private function save(Connection $connection)
     {
         $fh = fopen($this->getStorePath(), 'a');
         $row = [
-            $offer->getName(),
-            $offer->getCandidate(),
-            $offer->getContent(),
-            $offer->getAnswer(),
-            $offer->getUsed() ? '1' : '0'
+            $connection->getName(),
+            $connection->getOffer(),
+            $connection->getAnswer(),
+            $connection->getCandidate()
         ];
         fputcsv($fh, $row);
         fclose($fh);
