@@ -16,7 +16,7 @@ var rtcpc = function(connection){
     var pcConstraint = null;
     
     this.peerConnection = new RTCPeerConnection(pcServers, pcConstraint);
-    this.channel = this.peerConnection.createDataChannel('send', null);
+    this.channel = this.peerConnection.createDataChannel('player' + this.i, null);
     
     var self = this;
     var channelReceive = null;
@@ -52,6 +52,7 @@ var rtcpc = function(connection){
         var self = this;
         this.peerConnection.onicecandidate = function(event){
             if(event.candidate) {
+                console.log('ice', event.candidate.candidate);
                 self.connection.candidate = event.candidate;
             }
         };
@@ -90,8 +91,8 @@ var answerPoll = 0;
 var createPoll = 0;
 
 var answer = function(){
-    console.log("answer", connection.answer, connection.candidate);
     if (connection.answer && connection.candidate){
+        console.log("answer", connection.candidate.candidate);
         clearInterval(answerPoll);
         conn1.complete();
     }
@@ -101,7 +102,7 @@ var create = function(){
     if (connection.offer){
         clearInterval(createPoll);
         conn2.answer(conn1);
-        answerPoll = setInterval(answer, 20);
+        answerPoll = setInterval(answer, 20); // > 100ms can prevent successful creation
     }
 };
 
