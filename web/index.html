@@ -2,8 +2,9 @@
 <html>
 <head lang="en">
     <meta charset="UTF-8">
-    <link rel="stylesheet" href="style.css" />
     <title>Data Festivus</title>
+    <link rel="stylesheet" href="style.css" />
+    <script type="text/javascript" src="script.js"></script>
 </head>
 <body>
 <header>
@@ -19,6 +20,10 @@
         <li>That server only needs to stash a bit of JSON at a sharable URL.  Then it stores another bit of JSON, and then its job is done.  Hosting-R-Us's crappiest service can support this process, because it doesn't need to persist.  The busy communication is between browsers directly (that's the whole point).</li>
     </ol>
 </div>
-<script type="text/javascript" src="script.js"></script>
+<script type="text/javascript">
+    var connection = new ConnectionModel('abcd');
+    var offerer = connection.init('offeringplayer');
+    var answerer = connection.respond('answeringplayer');
+</script>
 </body>
 </html>
