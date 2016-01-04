@@ -19,6 +19,7 @@ var RTCData = function(id, _connection) {
     var self = this;
     var channelReceive = null;
     this.peerConnection.onicecandidate = function (event) {
+        //console.log(self.id + ' ice');
         if (event.candidate) {
             _connection.addCandidate(event.candidate, self.id);
         }
@@ -37,6 +38,7 @@ var RTCData = function(id, _connection) {
 RTCData.prototype.offer = function(connection) {
     var self = this;
     var onCreated = function(description){
+        //console.log(self.id + " offer");
         self.peerConnection.setLocalDescription(description);
         connection.setOffer(description);
     };
@@ -53,6 +55,7 @@ RTCData.prototype.answer = function(connection){
 
     var self = this;
     var onAnswer = function(description){
+        //console.log(self.id + " answer");
         self.peerConnection.setLocalDescription(description);
         connection.setAnswer(description);
     };
@@ -64,11 +67,12 @@ RTCData.prototype.answer = function(connection){
     this.peerConnection.createAnswer(onAnswer, createAnswerError)
 };
 RTCData.prototype.complete = function(connection){
-    if (!connection.answer || !connection.candidates[this.id].length){
+    //console.log(this.id + ' completing');
+    var iceCandidates = connection.getOtherCandidates(this.id);
+    if (!connection.answer || !iceCandidates.length){
         return;
     }
     this.peerConnection.setRemoteDescription(connection.answer);
-    var iceCandidates = connection.getOtherCandidates(this.id);
     for (var i in iceCandidates){
         this.peerConnection.addIceCandidate(iceCandidates[i]);
     }
@@ -82,7 +86,7 @@ var ConnectionModel = function(name) {
     // these fields are serialized
     this.offer = '';
     this.answer = '';
-    this.candidates = [];
+    this.candidates = {};
         
     // events
     this.onoffer = function(){};
@@ -97,6 +101,7 @@ ConnectionModel.prototype.init = function(name){
     offerer.offer(this);
 
     var checkComplete = function(conn) {
+        //console.log('on candidate/answer');
         if (conn.answer){
             var candidates = conn.getOtherCandidates(name);
             if (candidates.length){
@@ -114,6 +119,7 @@ ConnectionModel.prototype.respond = function(name){
     var answerer = new RTCData(name, this);
     
     this.onoffer = function(conn){
+        //console.log('on offer');
         if (conn.offer) {
             answerer.answer(conn);
         }
@@ -148,11 +154,47 @@ ConnectionModel.prototype.addCandidate = function(candidate, id){
 };
 ConnectionModel.prototype.getOtherCandidates = function(id){
     var result = [];
-    for (var i in this.candidates){
-        if (i != id){
-            result = this.candidates[i];
+    for (var _id in this.candidates){
+        if (_id != id){
+            result = this.candidates[_id];
             break;
         }
     }
     return result;
+};
+ConnectionModel.prototype.serialize = function(){
+    var data = {
+        'offer'         : this.offer,
+        'answer'        : this.answer,
+        'candidates'    : this.candidates
+    };
+    return JSON.stringify(data);
+};
+ConnectionModel.prototype.unserialize = function(data){
+    var json = JSON.parse(data);
+    var compareRTCSession = function(jsonObj, RTCSess){
+        var incoming = JSON.stringify(jsonObj);
+        var current = JSON.stringify(RTCSess);
+        return (incoming == current);
+    };
+    if (json.hasOwnProperty('offer')){
+        if (!compareRTCSession(json.offer, this.offer)) {
+            var offer = new RTCSessionDescription(json.offer);
+            this.setOffer(offer);
+        }
+    }
+    if (json.hasOwnProperty('answer')){
+        if (!compareRTCSession(json.answer, this.answer)){
+            var answer = new RTCSessionDescription(json.answer);
+            this.setAnswer(answer);
+        }
+    }
+    if (json.hasOwnProperty('candidates')){
+        for (var _id in json.candidates){
+            for (var i = 0; i < json.candidates[_id].length; ++i){
+                var iceCandidate = new RTCIceCandidate(json.candidates[_id][i]);
+                this.addCandidate(iceCandidate, _id);
+            }
+        }
+    }
 };

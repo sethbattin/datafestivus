@@ -21,9 +21,27 @@
     </ol>
 </div>
 <script type="text/javascript">
-    var connection = new ConnectionModel('abcd');
-    var offerer = connection.init('offeringplayer');
-    var answerer = connection.respond('answeringplayer');
+    var offererConnection = new ConnectionModel('abcd');
+    var offerer = offererConnection.init('offeringplayer');
+    
+    var answererConnection = new ConnectionModel('abcd');
+    var answerer = answererConnection.respond('answeringplayer');
+    
+    var updateOfferer = function(conn){
+        var data = conn.serialize();
+        // server magic
+        answererConnection.unserialize(data);
+    };
+    offererConnection.onoffer = updateOfferer;
+    
+    var updateAnswerer = function(conn){
+        var data = conn.serialize();
+        // server magic
+        offererConnection.unserialize(data);
+    };    
+    answererConnection.onanswer = updateAnswerer;
+    answererConnection.onaddcandidate = updateAnswerer;
+    
 </script>
 </body>
 </html>
