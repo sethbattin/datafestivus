@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Data Festivus</title>
+    <link rel="stylesheet" href="style.css" />
+    <script type="text/javascript" src="script.js"></script>
+</head>
+<body>
+<header>
+    <h1>WebRTC for the Rest of Us</h1>
+    <p>Because Mozilla and Google seem to think everyone wants to build their own video chat app.  But the rest of us don't care about that.</p>
+</header>
+<div id="main">
+    <div class="section">
+        <span id="input_message"></span>
+        <input type="text" onclick="this.select()" id="input_data"
+            value="Paste the offer data from the previous tab into this box." />
+    </div>
+    <div id="answer_p" class="section hide">
+        <span>Copy this data back into the other tab.</span>
+        <input type="text" onclick="this.select()" id="answer_data" />
+    </div>
+</div>
+<p>
+    <span><a href="offer.html">Start a connection</a></span>
+</p>
+<script type="text/javascript">
+
+    var main_div = document.getElementById('main');
+    var input_message = document.getElementById('input_message');
+    var input_data = document.getElementById('input_data');
+    var answer_p = document.getElementById('answer_p');
+    var answer_data = document.getElementById('answer_data');
+    
+    var answererConnection = new ConnectionModel('abcd');
+    var answerer = answererConnection.respond('answeringplayer');
+    
+    var rec = document.createElement('div');
+    answerer.setMessage(function(data){
+        var msg = document.createElement('span');
+        msg.textContent = "other: " + data;
+        rec.appendChild(msg);
+        rec.appendChild(document.createElement('br'));
+    });
+    
+    var unhide = function(el){
+        el.setAttribute('class', '');
+    };
+    var hide = function(el){
+        el.setAttribute('class', 'hide');
+    };
+    
+    input_data.addEventListener('change', function(e){
+        try {
+            JSON.parse(this.value);
+            answererConnection.unserialize(this.value);
+            hide(input_data);
+            unhide(answer_p);
+        } catch (err) {
+            console.error(err);
+            input_message.textContent = "invalid input, try copy-pasting again.";
+            unhide(input_message);
+        }
+    });
+    
+    var updateAnswerer = function(conn){
+        var data = conn.serialize();
+        answer_data.textContent = data;
+        answer_data.value = data;
+        unhide(answer_p);
+    };
+    answererConnection.onanswer = updateAnswerer;
+    answererConnection.onaddcandidate = updateAnswerer;
+    
+    answererConnection.onready = function(){
+        while (main_div.firstChild){
+            main_div.removeChild(main_div.firstChild);
+        }
+        var inp = document.createElement('input');
+        inp.type = 'text';
+        inp.setAttribute('placeholder', 'send a message');
+        main_div.appendChild(inp);
+        
+        main_div.appendChild(rec);
+
+        inp.onchange = function(){
+
+            var msg = document.createElement('span');
+            msg.textContent = "self: " + this.value;
+            rec.appendChild(msg);
+            rec.appendChild(document.createElement('br'));
+            
+            answerer.send(this.value);
+            this.value = '';
+        };
+        
+    };
+    
+</script>
+</body>
+</html>

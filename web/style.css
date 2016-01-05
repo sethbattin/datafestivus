@@ -40,6 +40,10 @@ table {
 }
 /* end of css reset */
 
+* {
+    transition: opacity 0.5s;
+}
+
 html {
     background-color:pink;
     height: 100%;
@@ -68,11 +72,25 @@ li {
     padding-bottom: 10px;
 }
 
+input {
+    clear: both;
+}
+
 #main {
     width: 90%;
-    height: 300px;
+    min-height: 300px;
     background-color: lightgray;
     padding: 20px;
     margin: 0 auto;
     border: 1px solid black;
+}
+
+.hide {
+    opacity: 0;
+}
+
+.section {
+    display: block;
+    float: left;
+    width: 25%;
 }

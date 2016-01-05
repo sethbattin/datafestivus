@@ -24,13 +24,30 @@ var RTCData = function(id, _connection) {
             _connection.addCandidate(event.candidate, self.id);
         }
     };
+    
+    this.send = function(data) {
+        if (_connection.ready) {
+            this.channel.send(data);
+        }
+    };
+    
+    // TODO: revise this to allow multiple observers, or some such?
+    // Closure problems with using self; can't update the property directly
+    // on the object.  This indirection allows the message to change.
+    var message = function(data) {
+        console.log(self.id + ' received: "', data );
+    };
+    this.setMessage = function(_message){
+        message = _message;
+    };
     this.peerConnection.ondatachannel = function (e) {
         _connection.setReady(true);
         console.log(self.id + " channel");
         channelReceive = e.channel;
         channelReceive.onmessage = function (event) {
-            console.log(self.id + ' received: "' + event.data + '".');
+            message(event.data);
         };
+        _connection.setReady(true);
     };
 
 };
