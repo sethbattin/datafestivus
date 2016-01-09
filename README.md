@@ -10,8 +10,8 @@ This project aims to create a stateless storage system on a server that can faci
 4. The data that needs to be transmitted is simple json; there's no need to complicate sharing it.  
 
 ## Dev Journal
-2016 Jan 3
-----------
+### 2016 Jan 3
+
 This project has been frustrating to say the least.  Originally begun in July of 2015 in service of [Radminton] multiplayer, the initial goal was to simply create a stateless-server based means of initiating a WebRTC connection between two parties.  This seemed simple, because the data for establishing the connection were easily serializable for storage anywhere, implying that the server itself would be straightforward.  However, that goal quickly fell by the wayside, as implementing even the simplest of WebRTC connections, sans any server, proved to be excessively difficult.
 
 The first problem was that WebRTC tutorials largely focused on the audio/video portion of the API.  Although that is clearly a more impressive demonstration than simple data packets, it emphasized unimportant (to me) features of the API to the detriment of clear explanation of basics.  Everything from STUN/TURN server lists to constructor arguments served these other goals, which obfuscated the remaining parts of the API usage.  This problem was part of the impetus of the project, but the problem persisted during the project's work as well.
@@ -31,8 +31,8 @@ So, with no better options available, I reverted my code to closer to the crappy
 [Radminton]: http://itsobviously.com/radminton/ "RADminton game"
 [1]: https://webrtc.github.io/samples/src/content/datachannel/basic/ "WebRTC Samples: transmitting text"
 
-2016 Jan 4
-----------
+### 2016 Jan 4
+
 After much success late last night, I was able to completely separate both halves of the connection into separate objects.  I was able to synchronize them only through a mock server, which updated the connection object for either side when the other received an update event.  This worked perfectly well.
 
 So this evening, I went a step further, and designed two completely separate pages that could accept the serialized connection object at the various phases of interaction, and establish a connection in distinct browser tabs.  I also tested it on distinct machines on my home network, and succeeded again.  Awesome.  The only remaining portion is to synchronize via an actual webserver, which is once again a trivial task.
@@ -40,3 +40,18 @@ So this evening, I went a step further, and designed two completely separate pag
 After that, I would like to simplify the interface for using the connection.  Then I will use this "library" to construct a [gameloop] library component, which I will use to transmit game state data between two remote machines.  Then money, then power, then women, etc. etc.
 
 [gameloop]: https://bitbucket.org/sbattin/gameloop "gameloop javascript canvas library"
+
+### 2016 Jan 8
+
+Plan for this weekend:
+ 
+1. Change the IM-based example to be less stupid, because currently it is designed around connecting to yourself and handling both tabs.  
+2. Implement the server-based system.  
+3. Diagnose the failures of the connections when they are attempted over anything more complex than a local network.  
+4. Consider updating the example from webrtc.github.io to use out-of-band communication based on the work from.
+
+---
+
+I completed number 1.  I think that, with a bit more effort, i could successfully accomplish number 4 in the same manner.  Unfortunately, number 4's work is mostly css and dom cleanup, which I have determined to be the thing I hate more than anything in the world.  It's so painful.
+
+I may change my tune after finishing number 2.  My intuition is that I will have to create a better design representing the information transfer.  So that design change will affect the new "manual" mode, too, even though it is driven by copy-paste.  I am imagining an instance representing a server.  It will be literally true in the case of number 2, and less so in the case of number 1.  Although perhaps the code surroundin the copy-paste will be identical, merely with the onchange events removed.  I'm not sure.

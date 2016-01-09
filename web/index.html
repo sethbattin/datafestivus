@@ -10,6 +10,11 @@
 <header>
 <h1>WebRTC for the Rest of Us</h1>
 <p>Because Mozilla and Google seem to think everyone wants to build their own video chat app.  But the rest of us don't care about that.</p>
+    <nav><ul class="inline">
+        <li><a href="index.html">Main</a></li>
+        <li><a href="manual.html">Manual</a></li>
+        <li><a href="server.html">Server</a></li>
+    </ul></nav>
 </header>
 <div id="main">
     <p>This app will establish a connection with another browser via WebRTC (Real-Time Communication) API.  It will not use this connection for video chat.  It might create a text chat.  But the important part is passing arbitrary data (that isn't immediately sent to a video output).</p>
@@ -19,32 +24,9 @@
         <li>Anything can serve as that server.  You don't need App Engine, Firebase, Node/Mongo, or any other goofy aparatus.  You need a webserver with one page and one data store.  You could probably use FTP, or even CPanel.  You might be able to make a Wordpress custom field do the job, if you were desperate enough.</li>
         <li>That server only needs to stash a bit of JSON at a sharable URL.  Then it stores another bit of JSON, and then its job is done.  Hosting-R-Us's crappiest service can support this process, because it doesn't need to persist.  The busy communication is between browsers directly (that's the whole point).</li>
     </ol>
+    <p>
+        <span><a href="manual.html">Try it.</a></span>
+    </p>
 </div>
-<p>
-    <span><a href="offer.html">Start a connection</a></span>
-</p>
-<script type="text/javascript">
-    var offererConnection = new ConnectionModel('abcd');
-    var offerer = offererConnection.init('offeringplayer');
-    
-    var answererConnection = new ConnectionModel('abcd');
-    var answerer = answererConnection.respond('answeringplayer');
-    
-    var updateOfferer = function(conn){
-        var data = conn.serialize();
-        // server magic
-        answererConnection.unserialize(data);
-    };
-    offererConnection.onoffer = updateOfferer;
-    
-    var updateAnswerer = function(conn){
-        var data = conn.serialize();
-        // server magic
-        offererConnection.unserialize(data);
-    };    
-    answererConnection.onanswer = updateAnswerer;
-    answererConnection.onaddcandidate = updateAnswerer;
-    
-</script>
 </body>
 </html>

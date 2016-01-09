@@ -76,6 +76,15 @@ input {
     clear: both;
 }
 
+ul.inline {
+    
+}
+ul.inline li {
+    display: inline;
+    list-style: none;
+    padding: 0 20px;
+}
+
 #main {
     width: 90%;
     min-height: 300px;
@@ -89,7 +98,7 @@ input {
     opacity: 0;
 }
 
-.section {
+.rec {
     display: block;
     float: left;
     width: 25%;

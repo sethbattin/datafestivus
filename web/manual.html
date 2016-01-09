@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Data Festivus</title>
+    <link rel="stylesheet" href="style.css" />
+    <script type="text/javascript" src="script.js"></script>
+    <style rel="stylesheet" type="text/css">
+        #main h2 {
+            display:block;
+            float:left;
+        }
+        .section-select {
+            display:block;
+            float: left;
+        }
+        .section-select li {
+            display: inline-block;
+            list-style: none;
+            padding: 5px 20px;
+            border: 1px solid black;
+            background-color: white;
+            margin: 10px;
+        }
+        .section-select li.selected {
+            background-color: pink;
+        }
+        section[data-section]{
+            clear:both;
+            display:none;
+        }
+        section[data-section].selected{
+            display: block;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>WebRTC for the Rest of Us</h1>
+    <p>Because Mozilla and Google seem to think everyone wants to build their own video chat app.  But the rest of us don't care about that.</p>
+    <nav><ul class="inline">
+        <li><a href="index.html">Main</a></li>
+        <li><a href="manual.html">Manual</a></li>
+        <li><a href="server.html">Server</a></li>
+    </ul></nav>
+</header>
+<div id="main">    
+    <h2>Use IM/Email/Pigeons:</h2>
+    <ul class="inline section-select">
+        <li data-section="init">Start a connection</li>
+        <li data-section="resp">Answer a connection</li>
+    </ul>
+    <section data-section="init">
+    <p>
+        <span><a id="start" href="#">Start the connection</a></span>
+    </p>
+    <div class="rec">
+        <label for="offerer_data" class="hide">Send this data to the answerer:</label>
+        <input type="text" onclick="this.select()" id="offerer_data" class="hide" value="This box will contain the connection data.  Click start to continue." />
+    </div>
+    <div class="rec">
+        <span id="reply_message"></span>
+        <input type="text" onclick="this.select()" id="reply_data"  class="hide"
+            value="This box will receive the response data.  Copy the data from the other tab to get that data." />
+    </div>
+    </section>
+    <section data-section="resp">
+        <p>
+        <span><a id="answer" href="#">Answer the connection</a></span>
+        </p>
+        <div id="answer_input" class="hide rec">
+            <span id="input_message"></span>
+            <input type="text" onclick="this.select()" id="input_data"
+               value="Paste the offer data from the previous tab into this box." />
+        </div>
+        <div id="answer_p" class="hide rec">
+            <span>Copy this data back into the other tab.</span>
+            <input type="text" onclick="this.select()" id="answer_data" />
+        </div>
+    </section>
+</div>
+<script type="text/javascript">
+    
+    var links = document.querySelectorAll('li[data-section]');
+    var addClick = function(i){
+        links.item(i).addEventListener('click', function(e){
+            for (var j = 0; j < links.length; ++j){
+                var selector = "section[data-section='" +
+                    links.item(j).dataset['section'] + "']";
+                var section = document.querySelector(selector);
+                var link = links.item(j); 
+                if (j != i){
+                    link.classList.remove('selected');
+                    section.classList.remove('selected');
+                } else {
+                    link.classList.add('selected');
+                    section.classList.add('selected');
+                }
+            }
+        });
+    };
+    for (var i = 0; i < links.length; ++i){
+        addClick(i)
+    }
+    
+    var main_div = document.getElementById('main');
+    var hide = function(el){ el.classList.add('hide'); };
+    var unhide = function(el){ el.classList.remove('hide'); };
+    
+    
+
+
+
+    var offerer_label = document.querySelector('[for="offerer_data"]');
+    var offerer_data = document.getElementById('offerer_data');
+    var reply_data = document.getElementById('reply_data');
+    var reply_message = document.getElementById('reply_message');
+
+    var start_link = document.getElementById('start');    
+    start_link.addEventListener('click', function(e){
+        e.preventDefault();
+        startConnection();
+    });
+    
+    var startConnection = function() {
+
+        var offererConnection = new ConnectionModel('abcd');
+        var offerer = null;
+
+        var rec = document.createElement('div');
+
+        hide(start_link);
+        unhide(offerer_data);
+        unhide(offerer_label);
+        unhide(reply_data);
+        unhide(reply_message);
+        reply_message.textContent = "paste returned data below.";
+        
+        offerer = offererConnection.init('offeringplayer');
+        offerer.setMessage(function (data) {
+            var msg = document.createElement('span');
+            msg.textContent = "other: " + data;
+            rec.appendChild(msg);
+            rec.appendChild(document.createElement('br'));
+            unhide(reply_data);
+        });
+        
+        reply_data.addEventListener('change', function (e) {
+            try {
+                var data = JSON.parse(this.value);
+                offererConnection.unserialize(this.value);
+            } catch (err) {
+                reply_message.textContent = "invalid data, try pasting again";
+            }
+        });
+
+        var updateOfferer = function (conn) {
+            var data = conn.serialize();
+            offerer_data.value = data;
+            offerer_data.textContent = data;
+        };
+        offererConnection.onoffer = updateOfferer;
+
+        offererConnection.onready = function () {
+            while (main_div.firstChild) {
+                main_div.removeChild(main_div.firstChild);
+            }
+            var inp = document.createElement('input');
+            inp.type = 'text';
+            inp.setAttribute('placeholder', 'send a message');
+            main_div.appendChild(inp);
+
+            main_div.appendChild(rec);
+
+            inp.onchange = function () {
+
+                var msg = document.createElement('span');
+                msg.textContent = "self: " + this.value;
+                rec.appendChild(msg);
+                rec.appendChild(document.createElement('br'));
+
+                offerer.send(this.value);
+                this.value = '';
+            };
+        };
+    };
+
+
+
+    var input_message = document.getElementById('input_message');
+    var input_data = document.getElementById('input_data');
+    var answer_input = document.getElementById('answer_input');
+    var answer_p = document.getElementById('answer_p');
+    var answer_data = document.getElementById('answer_data');
+
+    var answer_link = document.getElementById('answer');
+    answer_link.addEventListener('click', function(e){
+        e.preventDefault();
+        answerConnection();
+    });
+    var answerConnection = function() {
+
+        hide(answer_link);
+        unhide(answer_input);
+        
+        var answererConnection = new ConnectionModel('abcd');
+        var answerer = answererConnection.respond('answeringplayer');
+
+        var rec = document.createElement('div');
+        answerer.setMessage(function(data){
+            var msg = document.createElement('span');
+            msg.textContent = "other: " + data;
+            rec.appendChild(msg);
+            rec.appendChild(document.createElement('br'));
+        });
+
+        input_data.addEventListener('change', function(e){
+            try {
+                JSON.parse(this.value);
+                answererConnection.unserialize(this.value);
+                hide(input_data);
+                unhide(answer_p);
+            } catch (err) {
+                console.error(err);
+                input_message.textContent = "invalid input, try copy-pasting again.";
+                unhide(input_message);
+            }
+        });
+
+        var updateAnswerer = function(conn){
+            var data = conn.serialize();
+            answer_data.textContent = data;
+            answer_data.value = data;
+            unhide(answer_p);
+        };
+        answererConnection.onanswer = updateAnswerer;
+        answererConnection.onaddcandidate = updateAnswerer;
+
+        answererConnection.onready = function(){
+            while (main_div.firstChild){
+                main_div.removeChild(main_div.firstChild);
+            }
+            var inp = document.createElement('input');
+            inp.type = 'text';
+            inp.setAttribute('placeholder', 'send a message');
+            main_div.appendChild(inp);
+
+            main_div.appendChild(rec);
+
+            inp.onchange = function(){
+
+                var msg = document.createElement('span');
+                msg.textContent = "self: " + this.value;
+                rec.appendChild(msg);
+                rec.appendChild(document.createElement('br'));
+
+                answerer.send(this.value);
+                this.value = '';
+            };
+
+        };
+        
+    }
+
+</script>
+</body>
+</html>
