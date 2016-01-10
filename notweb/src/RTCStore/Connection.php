@@ -12,12 +12,12 @@ namespace DataFestivus\RTCStore;
  * Class Connection - Models the fields required for an RTC offer
  * @package RTCStore
  */
-class Connection
+class Connection implements \JsonSerializable
 {
     private $name = '';
     private $offer = '';
     private $answer = '';
-    private $candidate = '';
+    private $candidates = [];
 
     /**
      * @return string
@@ -68,19 +68,40 @@ class Connection
     }
 
     /**
-     * @return string
+     * @return string[] RTCIceCandidate json strings
      */
-    public function getCandidate()
+    public function getCandidates()
     {
-        return $this->candidate;
+        return $this->candidates;
     }
 
     /**
-     * @param string $answerCandidate
+     * @param string[] $answerCandidate json strings
      */
-    public function setCandidate($answerCandidate)
+    public function setCandidates(array $answerCandidates)
     {
-        $this->candidate = $answerCandidate;
+        $this->candidates = $answerCandidates;
     }
     
+    public function addCandidate($candidate)
+    {
+        $this->candidates[] = $candidate;
+    }
+
+    /**
+     * (PHP 5 &gt;= 5.4.0)<br/>
+     * Specify data which should be serialized to JSON
+     * @link http://php.net/manual/en/jsonserializable.jsonserialize.php
+     * @return mixed data which can be serialized by <b>json_encode</b>,
+     * which is a value of any type other than a resource.
+     */
+    function jsonSerialize()
+    {
+        return [
+            'name' => $this->getName(),
+            'offer' => json_decode($this->getOffer(), true),
+            'answer' => json_decode($this->getAnswer(), true),
+            'candidates' => json_decode($this->getCandidates(), true)
+        ];
+    }
 }

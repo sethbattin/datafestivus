@@ -143,7 +143,7 @@ ConnectionModel.prototype.respond = function(name){
     };
     
     return answerer;
-};
+};  
 ConnectionModel.prototype.setReady = function(val){
     this.ready = val;
     if (this.ready){

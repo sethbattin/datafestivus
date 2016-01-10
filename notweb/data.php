@@ -4,10 +4,10 @@ namespace DataFestivus;
 use DataFestivus\RTCStore\RTCStoreInterface;
 
 include_once('autoload.php');
-
 $df_config = require('.config.php');
 
 /**
+ * @global $df_config
  * @return RTCStore\RTCStoreInterface
  * @throws \Exception if instance cannot be instantiated from 'rtc_store' config
  */

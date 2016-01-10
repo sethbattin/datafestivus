@@ -44,39 +44,28 @@
         <li><a href="server.html">Server</a></li>
     </ul></nav>
 </header>
-<div id="main">    
-    <h2>Use IM/Email/Pigeons to establish a connection, choose one:</h2>
+<div id="main">
+    <h2>Use a stateless webserver (still need IM):</h2>
     <ul class="inline section-select">
         <li data-section="init">Start a connection</li>
         <li data-section="resp">Answer a connection</li>
     </ul>
     <section data-section="init">
-    <p>
-        <span><a id="start" href="#">Start the connection</a></span>
-    </p>
     <div class="rec">
-        <label for="offerer_data" class="hide">Send this data to the answerer:</label>
-        <input type="text" onclick="this.select()" id="offerer_data" class="hide" value="This box will contain the connection data.  Click start to continue." />
+        <form id="session_start">
+            <label for="session_name">Matchmaking Name</label>
+            <input type="text" id="session_name" name="session" required minlength="5"/>
+            <input type="submit" value="Start Session" />
+        </form>
     </div>
     <div class="rec">
-        <span id="reply_message"></span>
-        <input type="text" onclick="this.select()" id="reply_data"  class="hide"
-            value="This box will receive the response data.  Copy the data from the other tab to get that data." />
+        <span id="init_message"></span>
     </div>
     </section>
     <section data-section="resp">
         <p>
         <span><a id="answer" href="#">Answer the connection</a></span>
         </p>
-        <div id="answer_input" class="hide rec">
-            <span id="input_message"></span>
-            <input type="text" onclick="this.select()" id="input_data"
-               value="Paste the offer data from the previous tab into this box." />
-        </div>
-        <div id="answer_p" class="hide rec">
-            <span>Copy this data back into the other tab.</span>
-            <input type="text" onclick="this.select()" id="answer_data" />
-        </div>
     </section>
 </div>
 <script type="text/javascript">
@@ -104,28 +93,73 @@
     }
     
     var main_div = document.getElementById('main');
-    var hide = function(el){ el.classList.add('hide'); };
-    var unhide = function(el){ el.classList.remove('hide'); };
-    
-    
 
-
-
-    var offerer_label = document.querySelector('[for="offerer_data"]');
-    var offerer_data = document.getElementById('offerer_data');
-    var reply_data = document.getElementById('reply_data');
-    var reply_message = document.getElementById('reply_message');
-
-    var start_link = document.getElementById('start');    
-    start_link.addEventListener('click', function(e){
+    var start_form = document.getElementById('session_start');
+    start_form.addEventListener('submit', function(e){
         e.preventDefault();
-        startConnection();
+        if (this.checkValidity()){
+            var name = this.elements.namedItem('session').value;
+            var poller = new Poller();
+            poller.start(name);
+        }
     });
+    
+    var Poller = function(){
+        this.name = null;
+        this.offererConnection = null;
+        this.offerer = null;
+        
+        this.start = function(name){
+
+            this.offererConnection = new ConnectionModel(name);
+            var self = this;
+
+            var pollTimeout;
+            var pollXHR = function (conn, call, then) {
+                var connJson = conn.serialize();
+                var formData = new FormData();
+                formData.append('call', call);
+                formData.append('name', name);
+                formData.append('connection', connJson);
+
+                var xhr = new XMLHttpRequest();
+                xhr.open('POST', 'signal.php');
+                xhr.onload = function(XHRe){
+                    try {
+                        var data = JSON.parse(XHRe.target.response);
+                    } catch (e){
+                        console.log('invalid server response.');
+                        return;
+                    }
+                    if (data.result == 'success') {
+                        self.offererConnection.unserialize(
+                            JSON.stringify(data.connection)
+                        );
+                        then();
+                    } else {
+                        alert('error talking to server');
+                    }
+                };
+                xhr.send(formData);
+            };
+            var poll = function(){
+                pollXHR(self.offererConnection, 'update', function(){
+                    pollTimeout = setTimeout(poll, 500);
+                });
+            };
+            
+            this.offererConnection.onoffer = function(){
+                pollXHR(self.offererConnection, 'start', poll);
+            };
+            this.offerer = this.offererConnection.init('blah');
+            
+            
+        };
+        
+    };
     
     var startConnection = function() {
 
-        var offererConnection = new ConnectionModel('abcd');
-        var offerer = null;
 
         var rec = document.createElement('div');
 
@@ -154,13 +188,6 @@
             }
         });
 
-        var updateOfferer = function (conn) {
-            var data = conn.serialize();
-            offerer_data.value = data;
-            offerer_data.textContent = data;
-        };
-        offererConnection.onoffer = updateOfferer;
-
         offererConnection.onready = function () {
             while (main_div.firstChild) {
                 main_div.removeChild(main_div.firstChild);
@@ -185,14 +212,7 @@
         };
     };
 
-
-
-    var input_message = document.getElementById('input_message');
-    var input_data = document.getElementById('input_data');
-    var answer_input = document.getElementById('answer_input');
-    var answer_p = document.getElementById('answer_p');
-    var answer_data = document.getElementById('answer_data');
-
+    
     var answer_link = document.getElementById('answer');
     answer_link.addEventListener('click', function(e){
         e.preventDefault();
@@ -201,7 +221,6 @@
     var answerConnection = function() {
 
         hide(answer_link);
-        unhide(answer_input);
         
         var answererConnection = new ConnectionModel('abcd');
         var answerer = answererConnection.respond('answeringplayer');
@@ -214,18 +233,14 @@
             rec.appendChild(document.createElement('br'));
         });
 
-        input_data.addEventListener('change', function(e){
+        var serverOnUpdate = function(data){
             try {
-                JSON.parse(this.value);
-                answererConnection.unserialize(this.value);
-                hide(input_data);
-                unhide(answer_p);
+                JSON.parse(data);
+                answererConnection.unserialize(data);
             } catch (err) {
                 console.error(err);
-                input_message.textContent = "invalid input, try copy-pasting again.";
-                unhide(input_message);
             }
-        });
+        };
 
         var updateAnswerer = function(conn){
             var data = conn.serialize();

@@ -33,31 +33,29 @@ class CSV implements RTCStoreInterface
     
     /**
      * Create an RTC offer instance and save it.
-     * @param $name
-     * @param $candidate
-     * @param $content
+     * @param string $name
+     * @param string $offer RTCOffer json
      * @return \DataFestivus\RTCStore\Connection
      */
-    public function offerCreate($name, $candidate, $content)
+    public function offerCreate($name, $offer)
     {
         $connection = new Connection();
         $connection->setName($name);
-        $connection->setOffer($content);
+        $connection->setOffer($offer);
         $this->save($connection);
+        return $connection;
     }
 
     /**
      * Answer an existing offer and save it.
      * @param Connection $connection
-     * @param string $answer
-     * @param string $candidate
+     * @param string $answer RTCOfferAnswer json
      * @return void
      */
-    public function offerAnswer(Connection $connection, $answer, $candidate)
+    public function offerAnswer(Connection $connection, $answer)
     {
         $connection->setAnswer($answer);
-        $connection->setCandidate($candidate);
-        // TODO: Implement offerAnswer() method.
+        $this->save($connection);
     }
 
     /**
@@ -68,30 +66,48 @@ class CSV implements RTCStoreInterface
     public function getOffer($name)
     {
         $fh = fopen($this->getStorePath(), 'r');
+        if (!$fh){
+            throw new \Exception("Could not open rtcstore csv file.");
+        }
         $connection = null;
-        while (FALSE !== ($row = fgetcsv($fh))){
+        while ($fh && (FALSE !== ($row = fgetcsv($fh)))){
             if ((count($row) == 4) && $row[0] == $name){
                 $connection = new Connection();
                 $connection->setName($row[0]);
                 $connection->setOffer($row[1]);
                 $connection->setAnswer($row[2]);
-                $connection->setCandidate($row[3]);
+                $connection->setCandidates(unserialize($row[3]));
                 break;
             }
         }
+        fclose($fh);
         return $connection;
     }
     
     private function save(Connection $connection)
     {
         $fh = fopen($this->getStorePath(), 'a');
+        if (!$fh){
+            throw new \Exception("Could not open rtcstore csv file.");
+        }
         $row = [
             $connection->getName(),
             $connection->getOffer(),
             $connection->getAnswer(),
-            $connection->getCandidate()
+            serialize($connection->getCandidates())
         ];
         fputcsv($fh, $row);
         fclose($fh);
+    }
+
+    /**
+     * @param Connection $connection
+     * @param string $candidate - RTCIceCandidate json
+     * @return void
+     */
+    public function addIceCandidate(Connection $connection, $candidate)
+    {
+        $connection->addCandidate($candidate);
+        $this->save($connection);
     }
 }

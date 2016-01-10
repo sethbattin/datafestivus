@@ -55,3 +55,9 @@ Plan for this weekend:
 I completed number 1.  I think that, with a bit more effort, i could successfully accomplish number 4 in the same manner.  Unfortunately, number 4's work is mostly css and dom cleanup, which I have determined to be the thing I hate more than anything in the world.  It's so painful.
 
 I may change my tune after finishing number 2.  My intuition is that I will have to create a better design representing the information transfer.  So that design change will affect the new "manual" mode, too, even though it is driven by copy-paste.  I am imagining an instance representing a server.  It will be literally true in the case of number 2, and less so in the case of number 1.  Although perhaps the code surroundin the copy-paste will be identical, merely with the onchange events removed.  I'm not sure.
+
+---
+
+Other than an infinite loop completely filling my SSD with apache error logs, server work goes reasonably well.  Creating a one-off php app is as ugly as it ever was, especially for a data service.  C'est la vie.  I also regret my commitment to working sans jquery.  The utility is undeniable.
+
+The design of the js library hasn't really improved yet, though the common features of the copy-paste and the ajax polling seem to be emerging.  With some luck, the will both turn into common javascript objects that utilize the `ConnectionModel` as a prototype.  Or something like that.  The clean API for the library hasn't emerged yet either, that is slightly more troublesome.  It would like to get it to the point where creating a connection is a trivial matter of specifying a name from both directions.  Though i'm only half done, so perhaps that will emerge when it completes.

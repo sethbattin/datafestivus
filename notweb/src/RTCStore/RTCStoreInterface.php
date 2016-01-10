@@ -10,21 +10,26 @@ namespace DataFestivus\RTCStore;
 interface RTCStoreInterface {
     /**
      * Create an RTC connection instance and save it.
-     * @param $name
-     * @param $candidate
-     * @param $content
+     * @param string $name
+     * @param string $offer - RTCOffer json
      * @return \DataFestivus\RTCStore\Connection
      */
-    public function offerCreate($name, $candidate, $content);
+    public function offerCreate($name, $offer);
 
     /**
      * Answer an existing offer and save its connection.
      * @param Connection $connection
-     * @param string $answer - answer from RTCConnection
-     * @param string $candidate - ice candidate from answerer
+     * @param string $answer - RTCOfferAnswer json
      * @return void
      */
-    public function offerAnswer(Connection $connection, $answer, $candidate);
+    public function offerAnswer(Connection $connection, $answer);
+
+    /**
+     * @param Connection $connection
+     * @param string $candidate - RTCIceCandidate json
+     * @return void
+     */
+    public function addIceCandidate(Connection $connection, $candidate);
 
     /**
      * Retrieve an RTC connection with the specified name

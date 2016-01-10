@@ -1,0 +1,3 @@
+## Better yet, make /web the webroot like it was intended.  
+## But sometimes things don't go how you planned.
+Deny from all
