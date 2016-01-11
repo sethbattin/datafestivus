@@ -19,7 +19,7 @@ var RTCData = function(id, _connection) {
     var self = this;
     var channelReceive = null;
     this.peerConnection.onicecandidate = function (event) {
-        //console.log(self.id + ' ice');
+        console.log(self.id + ' ice');
         if (event.candidate) {
             _connection.addCandidate(event.candidate, self.id);
         }
@@ -113,7 +113,8 @@ var ConnectionModel = function(name) {
     this.onunready = function(){};
     
 };
-ConnectionModel.prototype.init = function(name){
+ConnectionModel.prototype.init = function(){
+    var name = 'offerer';
     var offerer = new RTCData(name, this);
     offerer.offer(this);
 
@@ -132,7 +133,8 @@ ConnectionModel.prototype.init = function(name){
     
     return offerer;
 };
-ConnectionModel.prototype.respond = function(name){
+ConnectionModel.prototype.respond = function(){
+    var name = 'answerer';
     var answerer = new RTCData(name, this);
     
     this.onoffer = function(conn){
@@ -194,13 +196,13 @@ ConnectionModel.prototype.unserialize = function(data){
         var current = JSON.stringify(RTCSess);
         return (incoming == current);
     };
-    if (json.hasOwnProperty('offer')){
+    if (json.hasOwnProperty('offer') && json.offer){
         if (!compareRTCSession(json.offer, this.offer)) {
             var offer = new RTCSessionDescription(json.offer);
             this.setOffer(offer);
         }
     }
-    if (json.hasOwnProperty('answer')){
+    if (json.hasOwnProperty('answer') && json.answer){
         if (!compareRTCSession(json.answer, this.answer)){
             var answer = new RTCSessionDescription(json.answer);
             this.setAnswer(answer);

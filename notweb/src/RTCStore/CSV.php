@@ -54,8 +54,13 @@ class CSV implements RTCStoreInterface
      */
     public function offerAnswer(Connection $connection, $answer)
     {
-        $connection->setAnswer($answer);
-        $this->save($connection);
+        $jsonObj = json_decode($answer);
+        if ($jsonObj && // valid json
+            $answer != $connection->getAnswer()
+        ) {
+            $connection->setAnswer($answer);
+            $this->save($connection);
+        }
     }
 
     /**
@@ -65,38 +70,61 @@ class CSV implements RTCStoreInterface
      */
     public function getOffer($name)
     {
+        $connections = $this->getAllConnections();
+        $result = null;
+        if (array_key_exists($name, $connections)){
+            $result = $connections[$name];
+        }
+        return $result;
+    }
+    
+    private function getAllConnections(){
         $fh = fopen($this->getStorePath(), 'r');
         if (!$fh){
             throw new \Exception("Could not open rtcstore csv file.");
         }
-        $connection = null;
+        $connections = [];
         while ($fh && (FALSE !== ($row = fgetcsv($fh)))){
-            if ((count($row) == 4) && $row[0] == $name){
+            if (count($row) == 4){
                 $connection = new Connection();
                 $connection->setName($row[0]);
                 $connection->setOffer($row[1]);
                 $connection->setAnswer($row[2]);
                 $connection->setCandidates(unserialize($row[3]));
-                break;
+                $connections[$row[0]] = $connection;
             }
         }
         fclose($fh);
-        return $connection;
+        return $connections;
     }
     
     private function save(Connection $connection)
     {
-        $fh = fopen($this->getStorePath(), 'a');
+        $connections = $this->getAllConnections();
+        $connections[$connection->getName()] = $connection;
+        $this->saveAllConnections($connections);
+        
+    }
+
+    /**
+     * @param Connection[] $connections
+     * @throws \Exception
+     */
+    private function saveAllConnections(array $connections)
+    {
+        $fh = fopen($this->getStorePath(), 'w');
         if (!$fh){
             throw new \Exception("Could not open rtcstore csv file.");
         }
-        $row = [
-            $connection->getName(),
-            $connection->getOffer(),
-            $connection->getAnswer(),
-            serialize($connection->getCandidates())
-        ];
-        fputcsv($fh, $row);
+        foreach ($connections as $connection) {
+            $row = [
+                $connection->getName(),
+                $connection->getOffer(),
+                $connection->getAnswer(),
+                serialize($connection->getCandidates())
+            ];
+            fputcsv($fh, $row);
+        }
         fclose($fh);
     }
 

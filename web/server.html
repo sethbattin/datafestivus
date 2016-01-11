@@ -6,32 +6,6 @@
     <link rel="stylesheet" href="style.css" />
     <script type="text/javascript" src="script.js"></script>
     <style rel="stylesheet" type="text/css">
-        #main h2 {
-            display:block;
-            float:left;
-        }
-        .section-select {
-            display:block;
-            float: left;
-        }
-        .section-select li {
-            display: inline-block;
-            list-style: none;
-            padding: 5px 20px;
-            border: 1px solid black;
-            background-color: white;
-            margin: 10px;
-        }
-        .section-select li.selected {
-            background-color: pink;
-        }
-        section[data-section]{
-            clear:both;
-            display:none;
-        }
-        section[data-section].selected{
-            display: block;
-        }
     </style>
 </head>
 <body>
@@ -58,14 +32,18 @@
             <input type="submit" value="Start Session" />
         </form>
     </div>
-    <div class="rec">
-        <span id="init_message"></span>
-    </div>
     </section>
     <section data-section="resp">
-        <p>
-        <span><a id="answer" href="#">Answer the connection</a></span>
-        </p>
+        <div class="rec">
+            <form id="session_reply">
+                <label for="session_name">Matchmaking Name</label>
+                <input type="text" id="session_name" name="session" required minlength="5"/>
+                <input type="submit" value="Start Session" />
+            </form>
+        </div>
+    </section>
+    <section id="city_chat" class="hide">
+        
     </section>
 </div>
 <script type="text/javascript">
@@ -93,6 +71,15 @@
     }
     
     var main_div = document.getElementById('main');
+    var city_chat = document.getElementById('city_chat');
+
+    var recMessage = function (data) {
+        var msg = document.createElement('span');
+        msg.textContent = "other: " + data;
+        city_chat.appendChild(msg);
+        city_chat.appendChild(document.createElement('br'));
+        unhide(reply_data);
+    };
 
     var start_form = document.getElementById('session_start');
     start_form.addEventListener('submit', function(e){
@@ -103,179 +90,133 @@
             poller.start(name);
         }
     });
+    var reply_form = document.getElementById('session_reply');
+    reply_form.addEventListener('submit', function(e){
+        e.preventDefault();
+        if (this.checkValidity()){
+            var name = this.elements.namedItem('session').value;
+            var poller = new Poller();
+            poller.reply(name);
+        }
+    });
     
     var Poller = function(){
         this.name = null;
-        this.offererConnection = null;
-        this.offerer = null;
-        
-        this.start = function(name){
+        this.connectionModel = null;
+        this.rtc = null;
+        var self = this;
 
-            this.offererConnection = new ConnectionModel(name);
-            var self = this;
+        var pollTimeout;
+        var pollXHR = function (conn, call, then) {
+            var connJson = conn.serialize();
+            var formData = new FormData();
+            formData.append('call', call);
+            formData.append('name', self.name);
+            formData.append('connection', connJson);
 
-            var pollTimeout;
-            var pollXHR = function (conn, call, then) {
-                var connJson = conn.serialize();
-                var formData = new FormData();
-                formData.append('call', call);
-                formData.append('name', name);
-                formData.append('connection', connJson);
-
-                var xhr = new XMLHttpRequest();
-                xhr.open('POST', 'signal.php');
-                xhr.onload = function(XHRe){
-                    try {
-                        var data = JSON.parse(XHRe.target.response);
-                    } catch (e){
-                        console.log('invalid server response.');
-                        return;
-                    }
-                    if (data.result == 'success') {
-                        self.offererConnection.unserialize(
-                            JSON.stringify(data.connection)
-                        );
-                        then();
-                    } else {
-                        alert('error talking to server');
-                    }
-                };
-                xhr.send(formData);
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', 'signal.php');
+            xhr.onload = function(XHRe){
+                try {
+                    var data = JSON.parse(XHRe.target.response);
+                } catch (e){
+                    console.log('invalid server response.');
+                    return;
+                }
+                if (data.result == 'success') {
+                    then(data);
+                } else {
+                    alert('error talking to server');
+                }
             };
-            var poll = function(){
-                pollXHR(self.offererConnection, 'update', function(){
-                    pollTimeout = setTimeout(poll, 500);
-                });
-            };
-            
-            this.offererConnection.onoffer = function(){
-                pollXHR(self.offererConnection, 'start', poll);
-            };
-            this.offerer = this.offererConnection.init('blah');
-            
-            
+            xhr.send(formData);
         };
         
-    };
-    
-    var startConnection = function() {
-
-
-        var rec = document.createElement('div');
-
-        hide(start_link);
-        unhide(offerer_data);
-        unhide(offerer_label);
-        unhide(reply_data);
-        unhide(reply_message);
-        reply_message.textContent = "paste returned data below.";
-        
-        offerer = offererConnection.init('offeringplayer');
-        offerer.setMessage(function (data) {
-            var msg = document.createElement('span');
-            msg.textContent = "other: " + data;
-            rec.appendChild(msg);
-            rec.appendChild(document.createElement('br'));
-            unhide(reply_data);
-        });
-        
-        reply_data.addEventListener('change', function (e) {
-            try {
-                var data = JSON.parse(this.value);
-                offererConnection.unserialize(this.value);
-            } catch (err) {
-                reply_message.textContent = "invalid data, try pasting again";
-            }
-        });
-
-        offererConnection.onready = function () {
-            while (main_div.firstChild) {
-                main_div.removeChild(main_div.firstChild);
-            }
+        var sendMessageWire = function () {
             var inp = document.createElement('input');
             inp.type = 'text';
             inp.setAttribute('placeholder', 'send a message');
-            main_div.appendChild(inp);
-
-            main_div.appendChild(rec);
+            city_chat.appendChild(inp);
 
             inp.onchange = function () {
 
                 var msg = document.createElement('span');
                 msg.textContent = "self: " + this.value;
-                rec.appendChild(msg);
-                rec.appendChild(document.createElement('br'));
+                city_chat.appendChild(msg);
+                city_chat.appendChild(document.createElement('br'));
 
-                offerer.send(this.value);
+                self.rtc.send(this.value);
                 this.value = '';
             };
         };
+        
+        this.start = function(name){
+            this.name = name;
+            this.connectionModel = new ConnectionModel(name);
+            var self = this;
+
+            var poll = function(){
+                pollXHR(self.connectionModel, 'fetch', function(data){
+                    self.connectionModel.unserialize(
+                            JSON.stringify(data.connection)
+                    );
+                    pollTimeout = setTimeout(poll, 750);
+                });
+            };
+            
+            this.connectionModel.onoffer = function(){
+                // start polling after creating the offer 
+                pollXHR(self.connectionModel, 'start', poll);
+            };
+            this.connectionModel.onicecandidate = function(conn){
+                clearTimeout(pollTimeout);
+                pollXHR(self.connectionModel, 'update', poll);
+            };
+            this.rtc = this.connectionModel.init();
+            this.connectionModel.onready = function(){
+                alert("waitwhat?");
+                clearTimeout(pollTimeout);
+                unhide(city_chat);
+                self.rtc.onmessage = recMessage;
+                sendMessageWire();
+            };
+            
+        };
+        
+        this.reply = function(name){
+            this.name = name;
+            this.connectionModel = new ConnectionModel(name);
+
+            var poll = function(){
+                pollXHR(self.connectionModel, 'fetch', function(data){
+                    self.connectionModel.unserialize(
+                            JSON.stringify(data.connection)
+                    );
+                    pollTimeout = setTimeout(poll, 750);
+                });
+            };
+            this.connectionModel.onanswer = function(){
+                clearTimeout(pollTimeout);
+                pollXHR(self.connectionModel, 'update', poll);
+            };
+
+            this.connectionModel.onicecandidate = function(conn){
+                clearTimeout(pollTimeout);
+                pollXHR(self.connectionModel, 'update', poll);
+            };
+            this.rtc = this.connectionModel.respond();
+            this.connectionModel.onready = function(){
+                clearTimeout(pollTimeout);
+                unhide(city_chat);
+                self.rtc.onmessage = recMessage;
+                sendMessageWire();
+            };
+            
+            //start polling immediately.
+            poll();
+        }
+        
     };
-
-    
-    var answer_link = document.getElementById('answer');
-    answer_link.addEventListener('click', function(e){
-        e.preventDefault();
-        answerConnection();
-    });
-    var answerConnection = function() {
-
-        hide(answer_link);
-        
-        var answererConnection = new ConnectionModel('abcd');
-        var answerer = answererConnection.respond('answeringplayer');
-
-        var rec = document.createElement('div');
-        answerer.setMessage(function(data){
-            var msg = document.createElement('span');
-            msg.textContent = "other: " + data;
-            rec.appendChild(msg);
-            rec.appendChild(document.createElement('br'));
-        });
-
-        var serverOnUpdate = function(data){
-            try {
-                JSON.parse(data);
-                answererConnection.unserialize(data);
-            } catch (err) {
-                console.error(err);
-            }
-        };
-
-        var updateAnswerer = function(conn){
-            var data = conn.serialize();
-            answer_data.textContent = data;
-            answer_data.value = data;
-            unhide(answer_p);
-        };
-        answererConnection.onanswer = updateAnswerer;
-        answererConnection.onaddcandidate = updateAnswerer;
-
-        answererConnection.onready = function(){
-            while (main_div.firstChild){
-                main_div.removeChild(main_div.firstChild);
-            }
-            var inp = document.createElement('input');
-            inp.type = 'text';
-            inp.setAttribute('placeholder', 'send a message');
-            main_div.appendChild(inp);
-
-            main_div.appendChild(rec);
-
-            inp.onchange = function(){
-
-                var msg = document.createElement('span');
-                msg.textContent = "self: " + this.value;
-                rec.appendChild(msg);
-                rec.appendChild(document.createElement('br'));
-
-                answerer.send(this.value);
-                this.value = '';
-            };
-
-        };
-        
-    }
 
 </script>
 </body>

@@ -103,3 +103,34 @@ ul.inline li {
     float: left;
     width: 25%;
 }
+
+#main h2 {
+    display:block;
+    float:left;
+}
+.section-select {
+    display:block;
+    float: left;
+}
+.section-select li {
+    display: inline-block;
+    list-style: none;
+    padding: 5px 20px;
+    border: 1px solid black;
+    background-color: white;
+    margin: 10px;
+}
+.section-select li.selected {
+    background-color: pink;
+}
+.section-select li:hover {
+    color: blue;
+    cursor: pointer;
+}
+section[data-section]{
+    clear:both;
+    display:none;
+}
+section[data-section].selected{
+    display: block;
+}

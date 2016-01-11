@@ -60,4 +60,10 @@ I may change my tune after finishing number 2.  My intuition is that I will have
 
 Other than an infinite loop completely filling my SSD with apache error logs, server work goes reasonably well.  Creating a one-off php app is as ugly as it ever was, especially for a data service.  C'est la vie.  I also regret my commitment to working sans jquery.  The utility is undeniable.
 
-The design of the js library hasn't really improved yet, though the common features of the copy-paste and the ajax polling seem to be emerging.  With some luck, the will both turn into common javascript objects that utilize the `ConnectionModel` as a prototype.  Or something like that.  The clean API for the library hasn't emerged yet either, that is slightly more troublesome.  It would like to get it to the point where creating a connection is a trivial matter of specifying a name from both directions.  Though i'm only half done, so perhaps that will emerge when it completes.
+The design of the js library hasn't really improved yet, though the common features of the copy-paste and the ajax polling seem to be emerging.  With some luck, the will both turn into common javascript objects that utilize the `ConnectionModel` as a prototype.  Or something like that.  The clean API for the library hasn't emerged yet either, that is slightly more troublesome.  It would like to get it to the point where creating a connection is a trivial matter of specifying a name from both directions.  Though i'm only half done, so perhaps that will emerge when it completes. 
+
+### 2016 Jan 9
+
+I fleshed out more work on the server.  There were various problems on both ends, and i spent more of my time revising javascript to update correctly.  It was not easy to do, and i'm quite certain i haven't designed it properly for easy utilization.  That is a shame.  I may give it a little pure design thought more in coming days.
+
+Otherwise, I am running low on initiative for completing it.   

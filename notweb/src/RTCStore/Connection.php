@@ -15,8 +15,8 @@ namespace DataFestivus\RTCStore;
 class Connection implements \JsonSerializable
 {
     private $name = '';
-    private $offer = '';
-    private $answer = '';
+    private $offer = null;
+    private $answer = null;
     private $candidates = [];
 
     /**
@@ -97,11 +97,18 @@ class Connection implements \JsonSerializable
      */
     function jsonSerialize()
     {
-        return [
+        $offer = $this->getOffer();
+        $answer = $this->getAnswer();
+        $candidates = [];
+        foreach ($this->getCandidates() as $candidate){
+            $candidates[] = json_decode($candidate, true);
+        }
+        $result = [
             'name' => $this->getName(),
-            'offer' => json_decode($this->getOffer(), true),
-            'answer' => json_decode($this->getAnswer(), true),
-            'candidates' => json_decode($this->getCandidates(), true)
+            'offer' => ($offer ? json_decode($offer, true) : ''),
+            'answer' => ($answer ? json_decode($answer, true) : ''),
+            'candidates' => $candidates
         ];
+        return $result;
     }
 }
