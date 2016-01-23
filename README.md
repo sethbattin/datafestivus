@@ -48,7 +48,7 @@ Plan for this weekend:
 1. Change the IM-based example to be less stupid, because currently it is designed around connecting to yourself and handling both tabs.  
 2. Implement the server-based system.  
 3. Diagnose the failures of the connections when they are attempted over anything more complex than a local network.  
-4. Consider updating the example from webrtc.github.io to use out-of-band communication based on the work from.
+4. Consider updating the example from webrtc.github.io to use out-of-band communication based on the work from 1.
 
 ---
 
@@ -67,3 +67,28 @@ The design of the js library hasn't really improved yet, though the common featu
 I fleshed out more work on the server.  There were various problems on both ends, and i spent more of my time revising javascript to update correctly.  It was not easy to do, and i'm quite certain i haven't designed it properly for easy utilization.  That is a shame.  I may give it a little pure design thought more in coming days.
 
 Otherwise, I am running low on initiative for completing it.   
+
+### 2016 Jan 23
+
+Brief hiatus; but it is time to resume debugging the webserver/datastore implementation.  It occurs to me that calling it "stateless" is pretty dumb, since it's saving a specific data value to a server and keeping track of it.  Seems pretty stateful, now that I think about it.  Perhaps I'll leave it alone and simply claim "stateless" communication (http).  It was, afterall, a replacement for a socket server.
+
+I reviewed my earlier entries to regain my bearings, and I was reminded that I have yet to succeed for any connection needing actual NAT to cross a firewall (i.e., the whole point of STUN, TURN, and ICE).  I think this is higher in priority that making the server-based system work, which implies that I should improve the IM-based system.  BUT!  I think that work would really imply forcing the IM-based system to operate more closely to the server-based in terms of synchronizing data.  And if I'm doing that, I will need to make the server-system actually work.  So perhaps I can get a fresh look and refactor both to a more consistent operating method.  That will be my task for today; code review for the purpose of refactoring, then improving.
+
+---
+
+It turns out that trying to debug external network traffic is especially difficult when you aren't actually connected to an external network.  Lesson learned.  I have refamiliarized myself with the code, at least.  Without further debugging possible, it's time to make pure architecture!
+
+* Connection
+ * Low level API
+ * Creates and answers offers and has ICE events
+ * sends and receives data after connection
+* ConnectionWrapper
+ * reads and writes the serialized connection
+ * Determines when to run procedures on either side's connection
+ * Provides data traffic interface
+* SideBand 
+ * Detects changes in the connection wrapper (indirectly via event handling)
+ * Adds changes to the connection from the sideband
+ * Disposable after connection is complete.
+
+That was a totally worthwhile exercise; here's what I learned.  The ConnectionWrapper is the most important part, and it ought to be able to operate with interchangeable sideband.  Ergo: the sideband is a component of the connectionwrapper at initialization time.

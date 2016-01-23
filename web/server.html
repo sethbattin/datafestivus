@@ -86,7 +86,7 @@
         e.preventDefault();
         if (this.checkValidity()){
             var name = this.elements.namedItem('session').value;
-            var poller = new Poller();
+            var poller = window.poller = new Poller(window, console);
             poller.start(name);
         }
     });
@@ -95,12 +95,12 @@
         e.preventDefault();
         if (this.checkValidity()){
             var name = this.elements.namedItem('session').value;
-            var poller = new Poller();
+            var poller = window.poller = new Poller(window, console);
             poller.reply(name);
         }
     });
     
-    var Poller = function(){
+    var Poller = function(glob, IO){
         this.name = null;
         this.connectionModel = null;
         this.rtc = null;
@@ -120,7 +120,7 @@
                 try {
                     var data = JSON.parse(XHRe.target.response);
                 } catch (e){
-                    console.log('invalid server response.');
+                    IO.log('invalid server response.');
                     return;
                 }
                 if (data.result == 'success') {
@@ -133,17 +133,17 @@
         };
         
         var sendMessageWire = function () {
-            var inp = document.createElement('input');
+            var inp = glob.document.createElement('input');
             inp.type = 'text';
             inp.setAttribute('placeholder', 'send a message');
             city_chat.appendChild(inp);
 
             inp.onchange = function () {
 
-                var msg = document.createElement('span');
+                var msg = glob.document.createElement('span');
                 msg.textContent = "self: " + this.value;
                 city_chat.appendChild(msg);
-                city_chat.appendChild(document.createElement('br'));
+                city_chat.appendChild(glob.document.createElement('br'));
 
                 self.rtc.send(this.value);
                 this.value = '';
@@ -158,23 +158,25 @@
             var poll = function(){
                 pollXHR(self.connectionModel, 'fetch', function(data){
                     self.connectionModel.unserialize(
-                            JSON.stringify(data.connection)
+                        JSON.stringify(data.connection)
                     );
                     pollTimeout = setTimeout(poll, 750);
                 });
             };
             
             this.connectionModel.onoffer = function(){
+                IO.log('on offer called');
                 // start polling after creating the offer 
                 pollXHR(self.connectionModel, 'start', poll);
             };
             this.connectionModel.onicecandidate = function(conn){
+                IO.log('offerer on ice candidate called.');
                 clearTimeout(pollTimeout);
                 pollXHR(self.connectionModel, 'update', poll);
             };
             this.rtc = this.connectionModel.init();
             this.connectionModel.onready = function(){
-                alert("waitwhat?");
+                IO.log('HOLY SHIT WE STARTED ONE');
                 clearTimeout(pollTimeout);
                 unhide(city_chat);
                 self.rtc.onmessage = recMessage;
@@ -189,6 +191,7 @@
 
             var poll = function(){
                 pollXHR(self.connectionModel, 'fetch', function(data){
+                    
                     self.connectionModel.unserialize(
                             JSON.stringify(data.connection)
                     );
@@ -196,16 +199,19 @@
                 });
             };
             this.connectionModel.onanswer = function(){
+                IO.log('on answer called');
                 clearTimeout(pollTimeout);
                 pollXHR(self.connectionModel, 'update', poll);
             };
 
             this.connectionModel.onicecandidate = function(conn){
+                IO.log('reply on ice candidate called.');
                 clearTimeout(pollTimeout);
                 pollXHR(self.connectionModel, 'update', poll);
             };
             this.rtc = this.connectionModel.respond();
             this.connectionModel.onready = function(){
+                IO.log('HOLY SHIT WE REPLIED');
                 clearTimeout(pollTimeout);
                 unhide(city_chat);
                 self.rtc.onmessage = recMessage;

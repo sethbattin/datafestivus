@@ -19,8 +19,10 @@ var RTCData = function(id, _connection) {
     var self = this;
     var channelReceive = null;
     this.peerConnection.onicecandidate = function (event) {
-        console.log(self.id + ' ice');
+        console.log('ICE EVENT: ' + self.id, event);
         if (event.candidate) {
+            console.log('ICE EVENT CANDIDATE: ' + self.id, event.candidate);
+            debugger;
             _connection.addCandidate(event.candidate, self.id);
         }
     };
@@ -55,7 +57,7 @@ var RTCData = function(id, _connection) {
 RTCData.prototype.offer = function(connection) {
     var self = this;
     var onCreated = function(description){
-        //console.log(self.id + " offer");
+        console.log(self.id + " offer");
         self.peerConnection.setLocalDescription(description);
         connection.setOffer(description);
     };
@@ -72,7 +74,7 @@ RTCData.prototype.answer = function(connection){
 
     var self = this;
     var onAnswer = function(description){
-        //console.log(self.id + " answer");
+        console.log(self.id + " answer");
         self.peerConnection.setLocalDescription(description);
         connection.setAnswer(description);
     };
@@ -84,7 +86,7 @@ RTCData.prototype.answer = function(connection){
     this.peerConnection.createAnswer(onAnswer, createAnswerError)
 };
 RTCData.prototype.complete = function(connection){
-    //console.log(this.id + ' completing');
+    console.log(this.id + ' completing');
     var iceCandidates = connection.getOtherCandidates(this.id);
     if (!connection.answer || !iceCandidates.length){
         return;
@@ -119,10 +121,12 @@ ConnectionModel.prototype.init = function(){
     offerer.offer(this);
 
     var checkComplete = function(conn) {
-        //console.log('on candidate/answer');
+        console.log('on candidate/answer');
         if (conn.answer){
+            console.log('offerer detected answer property');
             var candidates = conn.getOtherCandidates(name);
             if (candidates.length){
+                console.log('offerer detected incoming candidates.');
                 offerer.complete(conn);
             }
         }
@@ -138,7 +142,7 @@ ConnectionModel.prototype.respond = function(){
     var answerer = new RTCData(name, this);
     
     this.onoffer = function(conn){
-        //console.log('on offer');
+        console.log('on offer');
         if (conn.offer) {
             answerer.answer(conn);
         }
@@ -198,12 +202,14 @@ ConnectionModel.prototype.unserialize = function(data){
     };
     if (json.hasOwnProperty('offer') && json.offer){
         if (!compareRTCSession(json.offer, this.offer)) {
+            console.log('MODEL: ' + this.name + ' offer updated.');
             var offer = new RTCSessionDescription(json.offer);
             this.setOffer(offer);
         }
     }
     if (json.hasOwnProperty('answer') && json.answer){
         if (!compareRTCSession(json.answer, this.answer)){
+            console.log('MODEL: ' + this.name + ' answer updated.');
             var answer = new RTCSessionDescription(json.answer);
             this.setAnswer(answer);
         }
@@ -211,6 +217,7 @@ ConnectionModel.prototype.unserialize = function(data){
     if (json.hasOwnProperty('candidates')){
         for (var _id in json.candidates){
             for (var i = 0; i < json.candidates[_id].length; ++i){
+                console.log('MODEL: ' + this.name + ' ice candidates updated.');
                 var iceCandidate = new RTCIceCandidate(json.candidates[_id][i]);
                 this.addCandidate(iceCandidate, _id);
             }
