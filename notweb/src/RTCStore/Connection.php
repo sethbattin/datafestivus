@@ -85,6 +85,11 @@ class Connection implements \JsonSerializable
     
     public function addCandidate($candidate)
     {
+        foreach ($this->candidates as $c){
+            if ($candidate == $c) {
+                return;
+            }
+        }
         $this->candidates[] = $candidate;
     }
 
