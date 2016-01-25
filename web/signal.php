@@ -111,7 +111,10 @@ switch ($call) {
             if (array_key_exists('candidates', $update) &&
                 $update['candidates']
             ){
-                $c = $update['candidates'];
+                $candidates = $update['candidates'];
+                foreach ($candidates as $id => $candidate){
+                    $store->addIceCandidate($rtcConnection, json_encode($candidate));
+                }
             }
         }
         break;
