@@ -1,0 +1,4 @@
+## RENAME TO .htaccess, if necessary
+
+## set the relative path to df_autoload.php
+SetEnv df_autoload "../notweb/df_autoload.php"

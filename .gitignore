@@ -1,3 +1,4 @@
 *.log
 .config.php
 rtc_store.csv
+.htaccess

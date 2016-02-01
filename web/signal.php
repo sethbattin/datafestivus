@@ -15,7 +15,11 @@ const CALL_START = 'start';   // create and save a connection with 'name' identi
 const CALL_FETCH = 'fetch';   // get data for a connection by 'name'
 const CALL_UPDATE = 'update'; // add data to an existing connection  
 
-include_once($_SERVER['DOCUMENT_ROOT'] . '/../notweb/data.php');
+$df_autoload = '/../notweb/df_autoload.php';
+if (isset($_SERVER['df_autoload'])){
+    $df_autoload = $_SERVER['df_autoload'];
+}
+include_once(__DIR__ . '/' . $df_autoload);
 
 $CALL_LIST = [CALL_START, CALL_FETCH, CALL_UPDATE];
 $name = '';
