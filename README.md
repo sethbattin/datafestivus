@@ -92,3 +92,11 @@ It turns out that trying to debug external network traffic is especially difficu
  * Disposable after connection is complete.
 
 That was a totally worthwhile exercise; here's what I learned.  The ConnectionWrapper is the most important part, and it ought to be able to operate with interchangeable sideband.  Ergo: the sideband is a component of the connectionwrapper at initialization time.
+
+### 2016 Feb 1
+
+I think I missed an entry; I'm not 100% certain.  I definitely didn't type anything before beginning tonight.
+
+Luckily, I am already done.  I have a messaging system that initiates itself using my dumb server.  I would like to retool my copy-paste based method, as well, but only after I confirm or deny that this allows me to cross firewalls.
+
+First things first: this must be committed and deployed to a public webserver.

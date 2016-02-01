@@ -46,7 +46,7 @@
     };
     ConnectionModel.prototype.addCandidate = function(rtcIceCandidate){
         var id = candidateParseId(rtcIceCandidate.candidate);
-        IO.log("adding candidate: ", id);
+        IO.log("adding candidate: ", id, rtcIceCandidate);
         var preexisting = this.candidates.hasOwnProperty(id);
         this.candidates[id] = rtcIceCandidate;
         return !preexisting;
@@ -91,8 +91,9 @@
         if (data.hasOwnProperty('candidates')){
             for (var i = 0; i < data.candidates.length; ++i){
                 var rtcIceCandidate = new RTCIceCandidate(data.candidates[i]);
-                this.addCandidate(rtcIceCandidate);
-                this.onaddcandidate(rtcIceCandidate);
+                if (this.addCandidate(rtcIceCandidate)) {
+                    this.onaddcandidate(rtcIceCandidate);
+                }
             }
         }
     };
@@ -128,7 +129,7 @@
     var init = null;
     
     DataFestivus.prototype.addMessageListener = function(listener){
-        if (!(listener instanceof 'function')){
+        if (typeof listener != 'function'){
             IO.error('invalid listener');
             return;
         }
@@ -149,7 +150,7 @@
     };
     
     DataFestivus.prototype.send = function(data) {
-        if (this.peerConnection.ready) {
+        if (this.ready) {
             this.channel.send(data);
         } else {
             IO.error('peer connection is not ready.');
@@ -219,19 +220,20 @@
             }
         };
         this.connectionModel.onaddcandidate = function(candidate){
+            IO.log("setting remote candidate: ", candidate);
             self.peerConnection.addIceCandidate(candidate);
         };
         this.peerConnection.ondatachannel = function(e){
             self.ready = true;
             IO.log('channel ready.');
             self.channelRecieve = e.channel;
-            self.onmessage = function(_e) {
+            self.channelRecieve.onmessage = function(_e) {
                 IO.log('message received: ', _e.data);
                 for (var i in self.messageListeners) {
                     self.messageListeners[i](_e.data);
                 }
             };
-            self.sideBand.oncomplete(self.connectionModel);
+            self.sideBand.oncomplete(self);
         };
         this.sideBand.onupdate = function(connectionModelJson){
             self.connectionModel.unserialize(connectionModelJson);

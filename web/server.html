@@ -76,9 +76,8 @@
     var recMessage = function (data) {
         var msg = document.createElement('span');
         msg.textContent = "other: " + data;
-        city_chat.appendChild(msg);
         city_chat.appendChild(document.createElement('br'));
-        unhide(reply_data);
+        city_chat.appendChild(msg);
     };
 
     var start_form = document.getElementById('session_start');
@@ -88,6 +87,7 @@
             var name = this.elements.namedItem('session').value;
             var dataFestivusConnection = new DataFestivus();
             dataFestivusConnection.start(new PollSideBand(name));
+            dataFestivusConnection.addMessageListener(recMessage);
         }
     });
     var reply_form = document.getElementById('session_reply');
@@ -97,6 +97,7 @@
             var name = this.elements.namedItem('session').value;
             var dataFestivusConnection = new DataFestivus();
             dataFestivusConnection.reply(new PollSideBand(name));
+            dataFestivusConnection.addMessageListener(recMessage);
         }
     });
     
@@ -134,14 +135,20 @@
                 pollerXHR(formData, function(){ console.log("updated data."); });
             } else {
                 formData.append('call', 'start');
+                this.isStarted = true;
                 pollerXHR(formData, function(){
                     sb.isStarted = true;
                     console.log("started data."); 
                 });
             }
         };
-        sb.oncomplete = function(connectionModel){
+        sb.oncomplete = function(dataFestivus){
             clearTimeout(pollTimeout);
+            while (main_div.firstChild) {
+                main_div.removeChild(main_div.firstChild);
+            }
+            main_div.appendChild(city_chat);
+            city_chat.classList.remove('hide');
             var inp = document.createElement('input');
             inp.type = 'text';
             inp.setAttribute('placeholder', 'send a message');
@@ -154,7 +161,7 @@
                 city_chat.appendChild(msg);
                 city_chat.appendChild(document.createElement('br'));
 
-                connectionModel.send(this.value);
+                dataFestivus.send(this.value);
                 this.value = '';
             };
         };
