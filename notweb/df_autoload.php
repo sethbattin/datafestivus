@@ -1,7 +1,8 @@
 <?php
 
 namespace DataFestivus;
-use DataFestivus\RTCStore\RTCStoreInterface;
+use DataFestivus\RTCStore\RTCStore;
+use DataFestivus\RTCStore\Adapter\AdapterInterface;
 
 function autoload ($classname){
     $name_parts = explode("\\", $classname );
@@ -23,24 +24,25 @@ $df_config = require('.config.php');
 
 /**
  * @global $df_config
- * @return RTCStore\RTCStoreInterface
+ * @return RTCStore
  * @throws \Exception if instance cannot be instantiated from 'rtc_store' config
  */
 function get_store()
 {
     global $df_config;
     // default store  
-    $storeClass = '\DataFestivus\RTCStore\CSV';
+    $adapterClass = '\DataFestivus\RTCStore\Adapter\CSV';
     if ($sc = $df_config['rtc_store']) {
-        $storeClass = $sc;
+        $adapterClass = $sc;
     }
-    if (!class_exists($storeClass)) {
-        throw new \Exception(sprintf("invalid RTC store class name config '%s'.", $storeClass));
+    if (!class_exists($adapterClass)) {
+        throw new \Exception(sprintf("invalid RTC store class name config '%s'.", $adapterClass));
     }
-    $RTCstore = new $storeClass($df_config);
-    if (!($RTCstore instanceof RTCStoreInterface)) {
+    $adapter = new $adapterClass($df_config);
+    if (!($adapter instanceof AdapterInterface)) {
         throw new \Exception("RTC store class name is not a valid implementation.");
     }
+    $RTCstore = new RTCStore($adapter);
     return $RTCstore;
 }
 

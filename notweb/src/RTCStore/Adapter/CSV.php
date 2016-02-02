@@ -6,14 +6,16 @@
  * Time: 6:57 PM
  */
 
-namespace DataFestivus\RTCStore;
+namespace DataFestivus\RTCStore\Adapter;
+
+use DataFestivus\RTCStore\Connection;
 
 /**
  * Class CSV 
  * Basic storage for RTC candidates.  No DB required and easy to debug.
  * @package DataFestivus\RTCStore
  */
-class CSV implements RTCStoreInterface
+class CSV implements AdapterInterface
 {
     private $storePath;
     private function getStorePath(){
@@ -30,38 +32,6 @@ class CSV implements RTCStoreInterface
         $this->storePath = $config['csv_store']['file_path'];
     }
     
-    
-    /**
-     * Create an RTC offer instance and save it.
-     * @param string $name
-     * @param string $offer RTCOffer json
-     * @return \DataFestivus\RTCStore\Connection
-     */
-    public function offerCreate($name, $offer)
-    {
-        $connection = new Connection();
-        $connection->setName($name);
-        $connection->setOffer($offer);
-        $this->save($connection);
-        return $connection;
-    }
-
-    /**
-     * Answer an existing offer and save it.
-     * @param Connection $connection
-     * @param string $answer RTCOfferAnswer json
-     * @return void
-     */
-    public function offerAnswer(Connection $connection, $answer)
-    {
-        $jsonObj = json_decode($answer);
-        if ($jsonObj && // valid json
-            $answer != $connection->getAnswer()
-        ) {
-            $connection->setAnswer($answer);
-            $this->save($connection);
-        }
-    }
 
     /**
      * Retrieve an RTC offer with the specified name
@@ -98,7 +68,7 @@ class CSV implements RTCStoreInterface
         return $connections;
     }
     
-    private function save(Connection $connection)
+    public function save(Connection $connection)
     {
         $connections = $this->getAllConnections();
         $connections[$connection->getName()] = $connection;
@@ -126,16 +96,5 @@ class CSV implements RTCStoreInterface
             fputcsv($fh, $row);
         }
         fclose($fh);
-    }
-
-    /**
-     * @param Connection $connection
-     * @param string $candidate - RTCIceCandidate json
-     * @return void
-     */
-    public function addIceCandidate(Connection $connection, $candidate)
-    {
-        $connection->addCandidate($candidate);
-        $this->save($connection);
     }
 }
