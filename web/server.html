@@ -158,8 +158,8 @@
 
                 var msg = document.createElement('span');
                 msg.textContent = "self: " + this.value;
-                city_chat.appendChild(msg);
                 city_chat.appendChild(document.createElement('br'));
+                city_chat.appendChild(msg);
 
                 dataFestivus.send(this.value);
                 this.value = '';

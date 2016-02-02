@@ -2,3 +2,4 @@
 .config.php
 rtc_store.csv
 .htaccess
+*.sq3
