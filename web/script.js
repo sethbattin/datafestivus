@@ -22,7 +22,6 @@ var RTCData = function(id, _connection) {
         console.log('ICE EVENT: ' + self.id, event);
         if (event.candidate) {
             console.log('ICE EVENT CANDIDATE: ' + self.id, event.candidate);
-            debugger;
             _connection.addCandidate(event.candidate, self.id);
         }
     };
@@ -86,9 +85,10 @@ RTCData.prototype.answer = function(connection){
     this.peerConnection.createAnswer(onAnswer, createAnswerError)
 };
 RTCData.prototype.complete = function(connection){
-    console.log(this.id + ' completing');
+    console.log("CONN: " + this.id + ' completing');
     var iceCandidates = connection.getOtherCandidates(this.id);
     if (!connection.answer || !iceCandidates.length){
+        console.log("CONN: " + this.id + ' not ready');
         return;
     }
     this.peerConnection.setRemoteDescription(connection.answer);
@@ -121,12 +121,12 @@ ConnectionModel.prototype.init = function(){
     offerer.offer(this);
 
     var checkComplete = function(conn) {
-        console.log('on candidate/answer');
+        console.log('CONN MODEL: candidate/answer');
         if (conn.answer){
-            console.log('offerer detected answer property');
+            console.log('CONN MODEL: detected answer property');
             var candidates = conn.getOtherCandidates(name);
             if (candidates.length){
-                console.log('offerer detected incoming candidates.');
+                console.log('CONN MODEL: offerer detected incoming candidates.');
                 offerer.complete(conn);
             }
         }

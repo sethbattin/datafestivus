@@ -92,3 +92,32 @@ It turns out that trying to debug external network traffic is especially difficu
  * Disposable after connection is complete.
 
 That was a totally worthwhile exercise; here's what I learned.  The ConnectionWrapper is the most important part, and it ought to be able to operate with interchangeable sideband.  Ergo: the sideband is a component of the connectionwrapper at initialization time.
+
+### 2016 Feb 1
+
+I think I missed an entry; I'm not 100% certain.  I definitely didn't type anything before beginning tonight.
+
+Luckily, I am already done.  I have a messaging system that initiates itself using my dumb server.  I would like to retool my copy-paste based method, as well, but only after I confirm or deny that this allows me to cross firewalls.
+
+First things first: this must be committed and deployed to a public webserver.
+
+### 2016 Apr 1
+
+Two months!  What can I say...work and life.  But we are here now, and I have not forgotten my dream of making this networking library a reality.
+
+So I can see that I never logged the painful experience of pushing this code onto GoDaddy's craphosting-R-Us service.  Well...it starts and ends with PHP 5.3, with a touch of no shell access and a bit of magic quotes.  But really, 5.3; I keep forgetting how many useful enhancements came one minor version number after that.  I learned this language by writing to this version (and sometimes to 5.2), but unholy hell it was annoying and I can't imagine dealing with it daily.  The simple addition of javascript-style array literals makes so much difference in niceness of the language.  That, and \JsonSerializable.  And a helper method to spit out http headers (how is that not php4?).  Well, I conquered all those problems in the form of a reusable patch file, while I work out how to stop paying GoDaddy 80 cents per month.
+
+The "good" outcome of all that hard work was discovering that my system still doesn't accomplish a connection through a firewall.  But I suspect that I'm mis-interpreting the problem by even calling it a firewall issue.  Rather, the issue is that WebRTC cannot function in the way I've built it.
+
+After reading the spec for ICE and STUN and TURN and NAT and BLAH and BLAH BLAH BLAH, I realize that I've cut the legs off of connection establishment by polling and updating a connection too often.  The entire process of establishing a connection is dependent on both sides of the connection pinging each other back and forth.  This process avoids a problem in NAT where an incoming network call is blocked unless the target of that connection had previously tried to reach out to the address of the sender.  This problem exists on both sides of the connection, potentially.  So the only solution is to mutually gather up candidate connection paths, and begin pinging each other until their respective NAT systems let the connections come through.  Then and only then can you get mutual network traffic between the two.
+
+Well, that's not what I was doing.  I was initiating the second half of the process too soon.  It would kick off before the potential network paths were fully gathered.  Then on the other end, there was no hope for a non-trivial connection path to be established, because there wasn't enough information to do that spread-fire pinging.  My bad.
+
+Today, I hope to fix the problem.  If i'm lucky, it's a simple matter of holding the initial connection until candidate gathering is complete, and holding the response in the same manner.  If that works, I can consider refactoring the server to more logically represent this design, but that's later.
+
+### 2016 Apr 23
+Well, clearly last entry's plan did not go very well, because I made the log entry and then failed to do anything else.  And now 3 more weeks have gone by.  Attention must be paid.
+
+I reread my previous entry, and the plan remains the same.  I _think_ that I need an overhaul at the server level.  The data structure that I save must keep track of its current state in the sequence of offering, gathering, answering, etc.  There will be a correlated change in the polling mechanism, as well, but that is fine.  The JS needed a cleanup, too. 
+
+Unfortunately the server will render my carefully crafted GoDaddy patch worthless; but that's ok because they've forced me to migrate my hosting to a newer box anyway.  I think it will have php5.4 on it, at minimum.  God, I hope so.

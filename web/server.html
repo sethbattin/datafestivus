@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>Data Festivus</title>
     <link rel="stylesheet" href="style.css" />
-    <script type="text/javascript" src="script.js"></script>
+    <script type="text/javascript" src="datafestivus.js"></script>
     <style rel="stylesheet" type="text/css">
     </style>
 </head>
@@ -76,9 +76,8 @@
     var recMessage = function (data) {
         var msg = document.createElement('span');
         msg.textContent = "other: " + data;
-        city_chat.appendChild(msg);
         city_chat.appendChild(document.createElement('br'));
-        unhide(reply_data);
+        city_chat.appendChild(msg);
     };
 
     var start_form = document.getElementById('session_start');
@@ -86,8 +85,9 @@
         e.preventDefault();
         if (this.checkValidity()){
             var name = this.elements.namedItem('session').value;
-            var poller = window.poller = new Poller(window, console);
-            poller.start(name);
+            var dataFestivusConnection = new DataFestivus();
+            dataFestivusConnection.start(new PollSideBand(name));
+            dataFestivusConnection.addMessageListener(recMessage);
         }
     });
     var reply_form = document.getElementById('session_reply');
@@ -95,24 +95,18 @@
         e.preventDefault();
         if (this.checkValidity()){
             var name = this.elements.namedItem('session').value;
-            var poller = window.poller = new Poller(window, console);
-            poller.reply(name);
+            var dataFestivusConnection = new DataFestivus();
+            dataFestivusConnection.reply(new PollSideBand(name));
+            dataFestivusConnection.addMessageListener(recMessage);
         }
     });
     
-    var Poller = function(glob, IO){
-        this.name = null;
-        this.connectionModel = null;
-        this.rtc = null;
-        var self = this;
+    var PollSideBand = function(name){
+        var sb = Object.create(new DataFestivus.SideBand());
+        sb.name = name;
+        sb.isStarted = false;
 
-        var pollTimeout;
-        var pollXHR = function (conn, call, then) {
-            var connJson = conn.serialize();
-            var formData = new FormData();
-            formData.append('call', call);
-            formData.append('name', self.name);
-            formData.append('connection', connJson);
+        var pollerXHR = function (formData, then) {
 
             var xhr = new XMLHttpRequest();
             xhr.open('POST', 'signal.php');
@@ -120,11 +114,11 @@
                 try {
                     var data = JSON.parse(XHRe.target.response);
                 } catch (e){
-                    IO.log('invalid server response.');
+                    console.log('invalid server response.');
                     return;
                 }
                 if (data.result == 'success') {
-                    then(data);
+                    then(data.connection);
                 } else {
                     alert('error talking to server');
                 }
@@ -132,96 +126,67 @@
             xhr.send(formData);
         };
         
-        var sendMessageWire = function () {
-            var inp = glob.document.createElement('input');
+        sb.onsave = function(connectionModelData){
+            var formData = new FormData();
+            formData.append('connection', connectionModelData);
+            formData.append('name', sb.name);
+            if (sb.isStarted) {
+                formData.append('call', 'update');
+                pollerXHR(formData, function(){ console.log("updated data."); });
+            } else {
+                formData.append('call', 'start');
+                this.isStarted = true;
+                pollerXHR(formData, function(){
+                    sb.isStarted = true;
+                    console.log("started data."); 
+                });
+            }
+        };
+        sb.oncomplete = function(dataFestivus){
+            clearTimeout(pollTimeout);
+            while (main_div.firstChild) {
+                main_div.removeChild(main_div.firstChild);
+            }
+            main_div.appendChild(city_chat);
+            city_chat.classList.remove('hide');
+            var inp = document.createElement('input');
             inp.type = 'text';
             inp.setAttribute('placeholder', 'send a message');
             city_chat.appendChild(inp);
 
             inp.onchange = function () {
 
-                var msg = glob.document.createElement('span');
+                var msg = document.createElement('span');
                 msg.textContent = "self: " + this.value;
+                city_chat.appendChild(document.createElement('br'));
                 city_chat.appendChild(msg);
-                city_chat.appendChild(glob.document.createElement('br'));
 
-                self.rtc.send(this.value);
+                dataFestivus.send(this.value);
                 this.value = '';
             };
         };
-        
-        this.start = function(name){
-            this.name = name;
-            this.connectionModel = new ConnectionModel(name);
-            var self = this;
 
-            var poll = function(){
-                pollXHR(self.connectionModel, 'fetch', function(data){
-                    self.connectionModel.unserialize(
-                        JSON.stringify(data.connection)
-                    );
-                    pollTimeout = setTimeout(poll, 750);
+        var pollTimeout = 0;
+
+        var poll = function(){
+            var formData = new FormData();
+            if (sb.isStarted) {
+                formData.append('call', 'fetch');
+                formData.append('name', sb.name);
+                pollerXHR(formData, function (data){
+                    sb.onupdate(data);
+                    pollTimeout = setTimeout(poll, 1000);
                 });
-            };
-            
-            this.connectionModel.onoffer = function(){
-                IO.log('on offer called');
-                // start polling after creating the offer 
-                pollXHR(self.connectionModel, 'start', poll);
-            };
-            this.connectionModel.onicecandidate = function(conn){
-                IO.log('offerer on ice candidate called.');
-                clearTimeout(pollTimeout);
-                pollXHR(self.connectionModel, 'update', poll);
-            };
-            this.rtc = this.connectionModel.init();
-            this.connectionModel.onready = function(){
-                IO.log('HOLY SHIT WE STARTED ONE');
-                clearTimeout(pollTimeout);
-                unhide(city_chat);
-                self.rtc.onmessage = recMessage;
-                sendMessageWire();
-            };
-            
+            } else {
+                pollTimeout = setTimeout(poll, 1000);
+            }
+
+        };
+        sb.begin = function(){
+            poll();
         };
         
-        this.reply = function(name){
-            this.name = name;
-            this.connectionModel = new ConnectionModel(name);
-
-            var poll = function(){
-                pollXHR(self.connectionModel, 'fetch', function(data){
-                    
-                    self.connectionModel.unserialize(
-                            JSON.stringify(data.connection)
-                    );
-                    pollTimeout = setTimeout(poll, 750);
-                });
-            };
-            this.connectionModel.onanswer = function(){
-                IO.log('on answer called');
-                clearTimeout(pollTimeout);
-                pollXHR(self.connectionModel, 'update', poll);
-            };
-
-            this.connectionModel.onicecandidate = function(conn){
-                IO.log('reply on ice candidate called.');
-                clearTimeout(pollTimeout);
-                pollXHR(self.connectionModel, 'update', poll);
-            };
-            this.rtc = this.connectionModel.respond();
-            this.connectionModel.onready = function(){
-                IO.log('HOLY SHIT WE REPLIED');
-                clearTimeout(pollTimeout);
-                unhide(city_chat);
-                self.rtc.onmessage = recMessage;
-                sendMessageWire();
-            };
-            
-            //start polling immediately.
-            poll();
-        }
-        
+        return sb;
     };
 
 </script>
