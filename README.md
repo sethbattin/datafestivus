@@ -114,3 +114,10 @@ After reading the spec for ICE and STUN and TURN and NAT and BLAH and BLAH BLAH 
 Well, that's not what I was doing.  I was initiating the second half of the process too soon.  It would kick off before the potential network paths were fully gathered.  Then on the other end, there was no hope for a non-trivial connection path to be established, because there wasn't enough information to do that spread-fire pinging.  My bad.
 
 Today, I hope to fix the problem.  If i'm lucky, it's a simple matter of holding the initial connection until candidate gathering is complete, and holding the response in the same manner.  If that works, I can consider refactoring the server to more logically represent this design, but that's later.
+
+### 2016 Apr 23
+Well, clearly last entry's plan did not go very well, because I made the log entry and then failed to do anything else.  And now 3 more weeks have gone by.  Attention must be paid.
+
+I reread my previous entry, and the plan remains the same.  I _think_ that I need an overhaul at the server level.  The data structure that I save must keep track of its current state in the sequence of offering, gathering, answering, etc.  There will be a correlated change in the polling mechanism, as well, but that is fine.  The JS needed a cleanup, too. 
+
+Unfortunately the server will render my carefully crafted GoDaddy patch worthless; but that's ok because they've forced me to migrate my hosting to a newer box anyway.  I think it will have php5.4 on it, at minimum.  God, I hope so.
