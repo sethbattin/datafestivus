@@ -13,6 +13,28 @@ use DataFestivus\RTCStore\Adapter\AdapterInterface;
 
 class RTCStore 
 {
+    public static function instance()
+    {
+        if (!array_key_exists('df_config', $GLOBALS)){
+            throw new \Exception("no storage config available.");
+        }        
+        global $df_config;
+        // default store  
+        $adapterClass = '\DataFestivus\RTCStore\Adapter\CSV';
+        if ($sc = $df_config['rtc_store']) {
+            $adapterClass = $sc;
+        }
+        if (!class_exists($adapterClass)) {
+            throw new \Exception(sprintf("invalid RTC store class name config '%s'.", $adapterClass));
+        }
+        $adapter = new $adapterClass($df_config);
+        if (!($adapter instanceof AdapterInterface)) {
+            throw new \Exception("RTC store class name is not a valid implementation.");
+        }
+        $RTCstore = new RTCStore($adapter);
+        return $RTCstore;
+    }
+    
     private $adapater;
     public function __construct(AdapterInterface $adapter)
     {

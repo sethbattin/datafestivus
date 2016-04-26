@@ -24,24 +24,30 @@ class Controller {
             self::CALL_FETCH,
         ];
     }
-    
+
     /**
      * @param array $args - request arguments, i.e. $_POST
+     * @param RTCStore $store
      * @return array [
      *  int $statusCode, 
      *  string $statusMsg, 
      *  RTCConnection $connection, 
      *  string[] $errors
      * ]
+     * @throws \Exception
      */
-    public static function signal(array $args)
+    public static function signal(array $args, RTCStore $store = null)
     {
         $call = '';
         $name = '';
         $connection = '';
         extract($args, EXTR_IF_EXISTS);
         
-        $signal = new Controller(get_store());
+        if ($store == null){
+            $store = RTCStore::instance();
+        }
+        
+        $signal = new Controller($store);
         
         switch ($call) {
             case self::CALL_OFFER:

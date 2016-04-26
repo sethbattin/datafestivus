@@ -31,5 +31,7 @@ set_exception_handler(function(Exception $ex){
 });
 register_shutdown_function('df_return');
 
+$store = \DataFestivus\RTCStore\RTCStore::instance();
+
 list($statusCode, $status, $rtcConnection) = 
-    \DataFestivus\Controller::signal($_POST);
+    \DataFestivus\Controller::signal($_POST, $store);
