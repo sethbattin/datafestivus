@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+DURRR=`dirname $0`;
+cd $DURRR
 if [ ! -f phpunit.phar ]; then
     if [[ $PHP_VERSION -ge 50600 ]]; then
         wget https://phar.phpunit.de/phpunit.phar
@@ -7,4 +9,5 @@ if [ ! -f phpunit.phar ]; then
     fi
     chmod +x phpunit.phar
 fi
-phpunit.phar --bootstrap ../df_autoload.php .
+phpunit.phar --bootstrap ../df_autoload.php "$PWD"
+cd -
