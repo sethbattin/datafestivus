@@ -9,5 +9,5 @@ if [ ! -f phpunit.phar ]; then
     fi
     chmod +x phpunit.phar
 fi
-phpunit.phar --bootstrap ../df_autoload.php "$PWD"
+php ./phpunit.phar --bootstrap ../df_autoload.php "$PWD"
 cd -

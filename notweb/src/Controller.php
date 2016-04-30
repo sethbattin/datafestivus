@@ -113,33 +113,34 @@ class Controller {
         $offer = json_decode($connection);
     
         if (!$offer) {
-            $errors['connection'] =
-            "'connection' parameter required for call 'start'.";
+            $this->error('invalid', ['connection' =>
+            "'connection' parameter required for call 'start'."]);
         } else if (!property_exists($offer, 'offer')) {
-            $errors['connection'] =
-                "connection[offer] is required call 'start'.";
+            $this->error('invalid', ['connection' =>
+                "connection[offer] is required call 'start'."]);
         } else if ($exists = $this->getStore()->getOffer($name)){
-            $errors['connection'] =
-                sprintf("connection '%s' already exists.", $name);
+            $this->error('invalid', ['connection' =>
+                sprintf("connection '%s' already exists.", $name)]);
         } else {
             $this->rtcConnection = $this->getStore()
                 ->offerCreate($name, json_encode($offer->offer));
         }
+        
     }
     
     public function answer($name, $connection)
     {
         $update = null;
         if (!$connection) {
-            $errors['connection'] =
-                "'connection' parameter required for call 'update'.";
+            $this->error('invalid', ['connection' =>
+                "'connection' parameter required for call 'update'."]);
         } else if (!$update = json_decode($connection, true)){
-            $errors['connection'] =
-                "'connection' parameter invalid.";
+            $this->error('invalid', ['connection' =>
+                "'connection' parameter invalid."]);
         } else if (!$this->rtcConnection = $this->getStore()->getOffer($name)){
-            $this->code = 404;
             $this->error('notfound', 
                 ['name' => sprintf("connection '%s' not found.", $name)]);
+            $this->code = 404;
         } else {
             if (array_key_exists('answer', $update) &&
                 $update['answer']
@@ -161,8 +162,8 @@ class Controller {
     {
         $this->rtcConnection = $this->getStore()->getOffer($name);
         if (!$this->rtcConnection){
-            $this->code = 404;
             $this->error('not found', ['name' => sprintf("connection '%s' not found.", $name)]);
+            $this->code = 404;
         }
     }
     

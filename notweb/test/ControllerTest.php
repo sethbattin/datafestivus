@@ -1,5 +1,7 @@
 <?php
 use DataFestivus\Controller;
+use DataFestivus\RTCStore\RTCStore;
+use DataFestivus\RTCStore\Connection;
 
 /**
  * Created by PhpStorm.
@@ -9,9 +11,13 @@ use DataFestivus\Controller;
  */
 
 class ControllerTest extends PHPUnit_Framework_TestCase {
-    
+
+    /** @var Controller */
     private $controller;
     private $storeMockBuilder;
+    
+    /** @var  RTCStore */
+    private $rtcStore;
     
     public function setUp()
     {
@@ -19,9 +25,8 @@ class ControllerTest extends PHPUnit_Framework_TestCase {
             ->getMockBuilder('\DataFestivus\RTCStore\RTCStore')
             ->disableOriginalConstructor();
         
-        $rtcStore = $this->storeMockBuilder->getMock();
-        
-        $this->controller = new Controller($rtcStore);
+        $this->rtcStore = $this->storeMockBuilder->getMock();
+        $this->controller = new Controller($this->rtcStore);
     }
     
     public function testBasic()
@@ -124,15 +129,145 @@ class ControllerTest extends PHPUnit_Framework_TestCase {
         $this->assertArrayHasKey('call', $errors);
 
     }
-    
-    public function testOffer()
+
+    /**
+     * @dataProvider offerProvider
+     * @param string $name
+     * @param string $connJson
+     * @param integer $code
+     * @param Connection|null $initRTC
+     * @param Connection|null $RTCconn
+     */
+    public function testOffer($name, $connJson, $code, Connection $initRTC = null, Connection $RTCconn = null)
     {
+        $this->rtcStore->method('getOffer')->willReturn($initRTC);
+        $this->rtcStore->method('offerCreate')->willReturn($RTCconn);
+        $this->controller->offer($name, $connJson);
+        list($_code, $message, $connection, $errors) = 
+            $this->controller->getCallResult();
+        
+        $this->assertEquals($code, $_code);
+        $this->assertSame($RTCconn, $connection);
+    }
+
+    /**
+     * @dataProvider answerProvider
+     * @param string $name
+     * @param string $connJson
+     * @param integer $code
+     * @param Connection|null $RTCconn
+     */
+    public function testAnswer($name, $connJson, $code, Connection $RTCconn = null)
+    {
+        $this->rtcStore->method('getOffer')->willReturn($RTCconn);
+        $this->controller->answer($name, $connJson);
+        list($_code, $message, $connection, $errors) =
+            $this->controller->getCallResult();
+        
+        $this->assertEquals($code, $_code, sprintf("Expected result code %d, received %d (%d).", $code, $_code, $message));
+        $this->assertSame($connection, $RTCconn);
         
     }
+
+    /**
+     * @dataProvider fetchProvider
+     * @param string $name
+     * @param Connection $connection
+     * @param integer $code
+     */
+    public function testFetch($name, Connection $connection = null, $code)
+    {
+        $this->rtcStore->method('getOffer')->willReturn($connection);
+        $this->controller->fetch($name);
+        list($_code, $message, $_connection, $errors) =
+            $this->controller->getCallResult();
+        
+        $this->assertEquals($code, $_code);
+        $this->assertSame($connection, $_connection);
+    }
     
-    public function signalProvider()
+    public function offerProvider()
     {
         $data = []; 
+        
+        $data['plain'] = [
+            'test',
+            json_encode(['offer' => ['foo' => 'bar', 'baz' => 42]]),
+            200,
+            null,
+            new Connection()
+        ];
+        $data['exists'] = [
+            'test',
+            json_encode(['offer' => ['foo' => 'bar', 'baz' => 42]]),
+            400,
+            new Connection(),
+            null
+        ];
+        $data['malform'] = [
+            'test',
+            "{sjlkaskjlafsd I AM JSONLOL",
+            400,
+            new Connection(),
+            null
+        ];
+        $data['no offer'] = [
+            'test',
+            "{sjlkaskjlafsd: \"I AM JSONLOL\"}",
+            400,
+            new Connection(),
+            null
+        ];
+        
+        return $data;
+    }
+
+    public function answerProvider()
+    {
+        $data = [];
+
+        $data['plain'] = [
+            'test',
+            json_encode(['answer' => ['foo' => 'bar', 'baz' => 42]]),
+            200,
+            new Connection()
+        ];
+        
+        $data['not found'] = [
+            'test',
+            json_encode(['answer' => ['foo' => 'bar', 'baz' => 42]]),
+            404,
+            null
+        ];
+        $data['malform'] = [
+            'test',
+            "{sjlkaskjlafsd I AM JSONLOL",
+            400,
+            null
+        ];
+        $data['nothing'] = [
+            'test',
+            false,
+            400,
+            null
+        ];
+        $data['no answer'] = [
+            'test',
+            "{sjlkaskjlafsd: \"I AM JSONLOL\"}",
+            400,
+            null
+        ];
+
+        return $data;
+    }
+    
+    public function fetchProvider()
+    {
+        $data = [];
+        
+        $data['found'] = ['found', new Connection(), 200];
+        
+        $data['not found'] = ['found', null, 404];
         
         return $data;
     }
