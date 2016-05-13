@@ -46,7 +46,7 @@
         
     </section>
 </div>
-<script type="text/javascript">
+<script type="text/javascript" data-name="menu_junk">
     
     var links = document.querySelectorAll('li[data-section]');
     var addClick = function(i){
@@ -69,7 +69,8 @@
     for (var i = 0; i < links.length; ++i){
         addClick(i)
     }
-    
+</script>
+<script type="text/javascript" data-name="web_rtc_stuff"> 
     var main_div = document.getElementById('main');
     var city_chat = document.getElementById('city_chat');
 
@@ -131,10 +132,10 @@
             formData.append('connection', connectionModelData);
             formData.append('name', sb.name);
             if (sb.isStarted) {
-                formData.append('call', 'update');
+                formData.append('call', 'answer');
                 pollerXHR(formData, function(){ console.log("updated data."); });
             } else {
-                formData.append('call', 'start');
+                formData.append('call', 'offer');
                 this.isStarted = true;
                 pollerXHR(formData, function(){
                     sb.isStarted = true;

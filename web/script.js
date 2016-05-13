@@ -23,6 +23,8 @@ var RTCData = function(id, _connection) {
         if (event.candidate) {
             console.log('ICE EVENT CANDIDATE: ' + self.id, event.candidate);
             _connection.addCandidate(event.candidate, self.id);
+        } else if (event.target.iceGatheringState == 'complete') {
+            console.log('ICE GATHER COMPLETE: ' + self.id);
         }
     };
     

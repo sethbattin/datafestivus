@@ -124,6 +124,16 @@ class Controller {
         } else {
             $this->rtcConnection = $this->getStore()
                 ->offerCreate($name, json_encode($offer->offer));
+
+            if (property_exists($offer, 'candidates')){
+                $candidates = (array)$offer->candidates;
+                foreach ($candidates as $id => $candidate){
+                    $this->getStore()->addIceCandidate(
+                        $this->rtcConnection, 
+                        json_encode($candidate)
+                    );
+                }
+            }
         }
         
     }

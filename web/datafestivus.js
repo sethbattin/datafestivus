@@ -46,9 +46,11 @@
     };
     ConnectionModel.prototype.addCandidate = function(rtcIceCandidate){
         var id = candidateParseId(rtcIceCandidate.candidate);
-        IO.log("adding candidate: ", id, rtcIceCandidate);
         var preexisting = this.candidates.hasOwnProperty(id);
         this.candidates[id] = rtcIceCandidate;
+        if (!preexisting) {
+            IO.log("adding new candidate: ", id, rtcIceCandidate);
+        }
         return !preexisting;
     };
     ConnectionModel.prototype.setOffer = function(description){
@@ -165,7 +167,7 @@
             function(description){
                 self.peerConnection.setLocalDescription(description);
                 self.connectionModel.setOffer(description);
-                self.sideBand.save(self.connectionModel);
+                //self.sideBand.save(self.connectionModel);
             },
             function (error){
                 IO.error("createOffer() error: ", error)
@@ -184,12 +186,17 @@
         this.connectionModel.onoffer = function(rtcSessionDescription){
             self.peerConnection.setRemoteDescription(rtcSessionDescription);
             self.peerConnection.createAnswer(
+                // TODO: this is not being called
                 function(description){
                     self.peerConnection.setLocalDescription(description);
                     self.connectionModel.setAnswer(description);
-                    self.sideBand.save(self.connectionModel);
+                    //self.sideBand.save(self.connectionModel);
+                },
+                function(){
+                    console.log("answer create other?", arguments);
                 }
             );
+
         };
         this.sideBand.isStarted = true;
         this.sideBand.begin();
@@ -215,8 +222,11 @@
         this.peerConnection.onicecandidate = function(e){
             if (e.candidate){
                 if (self.connectionModel.addCandidate(e.candidate, channelName)){
-                    self.sideBand.save(self.connectionModel);
+                    //self.sideBand.save(self.connectionModel);
                 }
+            } else if (e.target.iceGatheringState == 'complete') {
+                console.log("done gathering ICE candidates.");
+                self.sideBand.save(self.connectionModel);
             }
         };
         this.connectionModel.onaddcandidate = function(candidate){
