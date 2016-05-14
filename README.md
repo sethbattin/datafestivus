@@ -121,3 +121,12 @@ Well, clearly last entry's plan did not go very well, because I made the log ent
 I reread my previous entry, and the plan remains the same.  I _think_ that I need an overhaul at the server level.  The data structure that I save must keep track of its current state in the sequence of offering, gathering, answering, etc.  There will be a correlated change in the polling mechanism, as well, but that is fine.  The JS needed a cleanup, too. 
 
 Unfortunately the server will render my carefully crafted GoDaddy patch worthless; but that's ok because they've forced me to migrate my hosting to a newer box anyway.  I think it will have php5.4 on it, at minimum.  God, I hope so.
+
+### 2016 May 14
+Last entry made me realize that my journal has been helping very little to cause me to accomplish anything.  The notes definitely have helped me gather my thoughts, but recently they are just an excuse to not do anything.  So I just plowed ahead with the previous plan to refactor the server structure, and then immediately (relative term) started refactoring the js to match, until I had something working again.  I am at that point now, which means I can squash the branch back into master.
+
+Along the way, I elected to make unit tests for the silly server.  It surely seemed like a titanic waste of time while I was pissing with it.  I integrated TravisCI on github as well, though that was definitely a waste of time.  I hyperbolize there; it wasn't a waste, it was good practice.  It just hasn't served me any purpose to have a CI server repeatedly telling me that my master branch was building wrongly.  I am running my few unit tests manually anyway.  I digress.
+
+The tests themselves turned out to be quite helpful.  After thoroughly proving that the server was operating as intended, (and cleaning up the architecture to make that testable and hence obvious,) I knew that the problems I was encountering in the page javascript were purely problems in the javascript.  That made them incredibly easy to debug, and the JS refactoring took almost no time at all.  I say almost because I think that Chrome is blatantly not performing WebRTC functions.  I updated Firefox and it performed perfectly.  Perhaps I'll simply need to install 64bit linux so that I can keep getting Chrome updates.
+
+From here, I move on to cleaning up my repo, making my tests correct, and possibly updating my public hosting to make another attempt at world-wide connections.  Cross my fingers.  If that works, it's on to implementing a game library wrapper.
