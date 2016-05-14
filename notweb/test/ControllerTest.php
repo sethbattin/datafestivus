@@ -148,11 +148,16 @@ class ControllerTest extends PHPUnit_Framework_TestCase {
     {
         $this->rtcStore->method('getOffer')->willReturn($initRTC);
         $this->rtcStore->method('offerCreate')->willReturn($RTCconn);
+        
         $this->controller->offer($name, $connJson);
         list($_code, $message, $connection, $errors) = 
             $this->controller->getCallResult();
         
-        $this->assertEquals($code, $_code);
+        $this->assertEquals($code, $_code, sprintf(
+            "Expected result code %d, received %d with message '%s' and " . 
+            "errors:\n%s\n\n starting json:\n%s",
+            $code, $_code, $message, var_export($errors, true), var_export(json_decode($connJson)))
+        );
         $this->assertSame($RTCconn, $connection);
     }
 
@@ -164,7 +169,7 @@ class ControllerTest extends PHPUnit_Framework_TestCase {
      */
     public function testOfferSuccess($name, $connJson, $candidateCount)
     {
-        $this->storeMockBuilder->setMethods(['getOffer', 'save']);
+        $this->storeMockBuilder->setMethods(['getOffer', 'save', 'addIceCandidate']);
         $store = $this->storeMockBuilder->getMock();
         
         $store
@@ -261,6 +266,13 @@ class ControllerTest extends PHPUnit_Framework_TestCase {
             null,
             new Connection()
         ];
+        $data['real offer 2'] = [
+            'real2',
+            $this->realOffer2(),
+            200,
+            null,
+            new Connection()
+        ];
         
         return $data;
     }
@@ -272,6 +284,16 @@ class ControllerTest extends PHPUnit_Framework_TestCase {
             'plain', 
             json_encode(['offer' => "some (invalid offer) text"]),
             0,  
+        ];
+        $data['real1'] = [
+            'real1',
+            $this->realOffer(),
+            1
+        ];
+        $data['real2'] = [
+            'real2',
+            $this->realOffer2(),
+            2
         ];
         
         return $data;
@@ -329,9 +351,17 @@ class ControllerTest extends PHPUnit_Framework_TestCase {
     
     private function realOffer()
     {
-        return <<<EOT
+        $json = '
 {"offer":{"type":"offer","sdp":"v=0\r\no=- 9210004117717715019 2 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\na=msid-semantic: WMS\r\nm=application 9 DTLS/SCTP 5000\r\nc=IN IP4 0.0.0.0\r\na=ice-ufrag:NL1cEc2WxKcb5V9o\r\na=ice-pwd:6l97/PRrjSD5Z9gUU4qQPnLI\r\na=fingerprint:sha-256 08:E5:B4:27:AD:E5:9F:57:F1:2F:9A:40:0A:FA:CD:74:3E:5D:7E:82:34:20:6F:EF:28:E4:63:D5:61:AD:44:5C\r\na=setup:actpass\r\na=mid:data\r\na=sctpmap:5000 webrtc-datachannel 1024\r\n"},"answer":"","candidates":{"3495365531":{"candidate":"candidate:3495365531 1 udp 2113937151 192.168.2.13 59367 typ host generation 0","sdpMid":"data","sdpMLineIndex":0}}}
-EOT;
-        
+';
+        return $json;
+    }
+    private function realOffer2()
+    {
+        $json = '
+{"offer":{"type":"offer","sdp":"v=0\r\no=- 9210004117717715019 2 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\na=msid-semantic: WMS\r\nm=application 9 DTLS/SCTP 5000\r\nc=IN IP4 0.0.0.0\r\na=ice-ufrag:NL1cEc2WxKcb5V9o\r\na=ice-pwd:6l97/PRrjSD5Z9gUU4qQPnLI\r\na=fingerprint:sha-256 08:E5:B4:27:AD:E5:9F:57:F1:2F:9A:40:0A:FA:CD:74:3E:5D:7E:82:34:20:6F:EF:28:E4:63:D5:61:AD:44:5C\r\na=setup:actpass\r\na=mid:data\r\na=sctpmap:5000 webrtc-datachannel 1024\r\n"},"answer":"","candidates":{"3495365531":{"candidate":"candidate:3495365531 1 udp 2113937151 192.168.2.13 59367 typ host generation 0","sdpMid":"data","sdpMLineIndex":0},
+"3495365532":{"candidate":"candidate:3495365532 1 udp 2113937151 192.168.2.13 59367 typ host generation 0","sdpMid":"data","sdpMLineIndex":0}}}
+';
+        return $json;
     }
 }
