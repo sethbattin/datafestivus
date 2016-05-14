@@ -2,6 +2,7 @@
 use DataFestivus\Controller;
 use DataFestivus\RTCStore\RTCStore;
 use DataFestivus\RTCStore\Connection;
+use DataFestivus\RTCStore\Adapter\AdapterInterface;
 
 /**
  * Created by PhpStorm.
@@ -19,11 +20,16 @@ class ControllerTest extends PHPUnit_Framework_TestCase {
     /** @var  RTCStore */
     private $rtcStore;
     
+    /** @var  AdapterInterface */
+    private $adapter;
+    
     public function setUp()
     {
-        $this->storeMockBuilder = $this
-            ->getMockBuilder('\DataFestivus\RTCStore\RTCStore')
-            ->disableOriginalConstructor();
+        $this->storeMockBuilder = 
+            $this->getMockBuilder('\DataFestivus\RTCStore\RTCStore');
+        $this->adapter = $this->getMock(
+            'DataFestivus\RTCStore\Adapter\AdapterInterface'); 
+        $this->storeMockBuilder->setConstructorArgs([$this->adapter]);
         
         $this->rtcStore = $this->storeMockBuilder->getMock();
         $this->controller = new Controller($this->rtcStore);
@@ -151,6 +157,36 @@ class ControllerTest extends PHPUnit_Framework_TestCase {
     }
 
     /**
+     * @dataProvider successOfferProvider
+     * @param string $name
+     * @param string $connJson
+     * @param integer $candidateCount - number of candidates to be added
+     */
+    public function testOfferSuccess($name, $connJson, $candidateCount)
+    {
+        $this->storeMockBuilder->setMethods(['getOffer', 'save']);
+        $store = $this->storeMockBuilder->getMock();
+        
+        $store
+            ->expects($this->exactly($candidateCount))
+            ->method('addIceCandidate');
+        
+        $this->adapter
+            ->expects($this->once())
+            ->method('save');
+
+        // do the process
+        $this->controller = new Controller($store);
+        $this->controller->offer($name, $connJson);
+        
+        // save succeeded
+        list($code, $m, $conn, $e) = $this->controller->getCallResult();
+        $this->assertEquals(200, $code);
+        $this->assertInstanceOf('DataFestivus\RTCStore\Connection', $conn);
+        
+    }
+
+    /**
      * @dataProvider answerProvider
      * @param string $name
      * @param string $connJson
@@ -218,6 +254,25 @@ class ControllerTest extends PHPUnit_Framework_TestCase {
             new Connection(),
             null
         ];
+        $data['real offer'] = [
+            'real',
+            $this->realOffer(),
+            200,
+            null,
+            new Connection()
+        ];
+        
+        return $data;
+    }
+
+    public function successOfferProvider()
+    {
+        $data = [];
+        $data['plain'] = [
+            'plain', 
+            json_encode(['offer' => "some (invalid offer) text"]),
+            0,  
+        ];
         
         return $data;
     }
@@ -270,5 +325,13 @@ class ControllerTest extends PHPUnit_Framework_TestCase {
         $data['not found'] = ['found', null, 404];
         
         return $data;
+    }
+    
+    private function realOffer()
+    {
+        return <<<EOT
+{"offer":{"type":"offer","sdp":"v=0\r\no=- 9210004117717715019 2 IN IP4 127.0.0.1\r\ns=-\r\nt=0 0\r\na=msid-semantic: WMS\r\nm=application 9 DTLS/SCTP 5000\r\nc=IN IP4 0.0.0.0\r\na=ice-ufrag:NL1cEc2WxKcb5V9o\r\na=ice-pwd:6l97/PRrjSD5Z9gUU4qQPnLI\r\na=fingerprint:sha-256 08:E5:B4:27:AD:E5:9F:57:F1:2F:9A:40:0A:FA:CD:74:3E:5D:7E:82:34:20:6F:EF:28:E4:63:D5:61:AD:44:5C\r\na=setup:actpass\r\na=mid:data\r\na=sctpmap:5000 webrtc-datachannel 1024\r\n"},"answer":"","candidates":{"3495365531":{"candidate":"candidate:3495365531 1 udp 2113937151 192.168.2.13 59367 typ host generation 0","sdpMid":"data","sdpMLineIndex":0}}}
+EOT;
+        
     }
 }
