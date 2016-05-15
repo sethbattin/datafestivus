@@ -27,18 +27,18 @@
     <section data-section="init">
     <div class="rec">
         <form id="session_start">
-            <label for="session_name">Matchmaking Name</label>
-            <input type="text" id="session_name" name="session" required minlength="5"/>
-            <input type="submit" value="Start Session" />
+            <label for="start_name">Matchmaking Name</label>
+            <input type="text" id="start_name" name="session" required minlength="5"/>
+            <input type="submit" id="start_submit" value="Start Session" />
         </form>
     </div>
     </section>
     <section data-section="resp">
         <div class="rec">
             <form id="session_reply">
-                <label for="session_name">Matchmaking Name</label>
-                <input type="text" id="session_name" name="session" required minlength="5"/>
-                <input type="submit" value="Start Session" />
+                <label for="reply_name">Matchmaking Name</label>
+                <input type="text" id="reply_name" name="session" required minlength="5"/>
+                <input type="submit" id="reply_submit"  value="Start Session" />
             </form>
         </div>
     </section>
@@ -82,9 +82,13 @@
     };
 
     var start_form = document.getElementById('session_start');
-    start_form.addEventListener('submit', function(e){
+    start_form.addEventListener('submit', function (e) {
         e.preventDefault();
+    });
+    start_form.addEventListener('submit', function start_submit(e){
         if (this.checkValidity()){
+            start_form.removeEventListener('submit', start_submit);
+            start_form.children.namedItem('start_submit').disabled = true;
             var name = this.elements.namedItem('session').value;
             var dataFestivusConnection = new DataFestivus();
             dataFestivusConnection.start(new PollSideBand(name));
@@ -92,9 +96,13 @@
         }
     });
     var reply_form = document.getElementById('session_reply');
-    reply_form.addEventListener('submit', function(e){
+    reply_form.addEventListener('submit', function (e) {
         e.preventDefault();
+    });
+    reply_form.addEventListener('submit', function answer_submit(e){
         if (this.checkValidity()){
+            reply_form.removeEventListener('submit', answer_submit);
+            reply_form.children.namedItem('reply_submit').disabled = true;
             var name = this.elements.namedItem('session').value;
             var dataFestivusConnection = new DataFestivus();
             dataFestivusConnection.reply(new PollSideBand(name));
@@ -122,6 +130,7 @@
                     then(data.connection);
                 } else {
                     alert('error talking to server');
+                    console.log('server error result:', data);
                 }
             };
             xhr.send(formData);
