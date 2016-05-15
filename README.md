@@ -1,6 +1,8 @@
 # Data Festivus
 WebRTC for the rest of us.  It's a miracle.
 
+Can you believe this: [![Build Status](https://travis-ci.org/sethbattin/datafestivus.svg?branch=master)](https://travis-ci.org/sethbattin/datafestivus)
+
 ## Goals
 This project aims to create a stateless storage system on a server that can facilitate a peer-to-peer connection in WebRTC.  It also implements a WebRTC app that demonstrates its usefulness.  The reason for the server application is:
 

@@ -156,7 +156,7 @@ class ControllerTest extends PHPUnit_Framework_TestCase {
         $this->assertEquals($code, $_code, sprintf(
             "Expected result code %d, received %d with message '%s' and " . 
             "errors:\n%s\n\n starting json:\n%s",
-            $code, $_code, $message, var_export($errors, true), var_export(json_decode($connJson)))
+            $code, $_code, $message, var_export($errors, true), var_export(json_decode($connJson), true))
         );
         $this->assertSame($RTCconn, $connection);
     }
