@@ -185,10 +185,10 @@
                 formData.append('name', sb.name);
                 pollerXHR(formData, function (data){
                     sb.onupdate(data);
-                    pollTimeout = setTimeout(poll, 1000);
+                    pollTimeout = setTimeout(poll, 5000);
                 });
             } else {
-                pollTimeout = setTimeout(poll, 1000);
+                pollTimeout = setTimeout(poll, 5000);
             }
 
         };
