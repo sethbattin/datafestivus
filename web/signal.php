@@ -16,11 +16,12 @@ function df_return()
     header("Content-Type: application/json");
 
     http_response_code($statusCode);
-    die(json_encode(array(
+    echo json_encode(array(
         'result' => $status,
         'errors' => $errors,
         'connection' => $rtcConnection
-    )));
+    ));
+    exit();
 }
 
 set_exception_handler(function(Exception $ex){
@@ -35,3 +36,4 @@ $store = \DataFestivus\RTCStore\RTCStore::instance();
 
 list($statusCode, $status, $rtcConnection) = 
     \DataFestivus\Controller::signal($_POST, $store);
+exit();
