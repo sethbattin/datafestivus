@@ -21,6 +21,7 @@ function df_return()
         'errors' => $errors,
         'connection' => $rtcConnection
     ));
+    error_log('returning datafestivus result');
     exit();
 }
 
@@ -29,6 +30,8 @@ set_exception_handler(function(Exception $ex){
     $statusCode = 500;
     $status = 'error';
     $errors['server'] = $ex->getMessage();
+    error_log('data festivus exception: ' . var_export($ex, true));
+    df_return();
 });
 register_shutdown_function('df_return');
 
