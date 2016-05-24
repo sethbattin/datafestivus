@@ -20,60 +20,27 @@
     </ul></nav>
 </header>
 <div id="main">
-    <h2>Use a stateless webserver (still need IM):</h2>
-    <ul class="inline section-select">
-        <li data-section="init">Start a connection</li>
-        <li data-section="resp">Answer a connection</li>
-    </ul>
-    <section data-section="init">
-    <div class="rec">
-        <form id="session_start">
-            <label for="start_name">Matchmaking Name</label>
-            <input type="text" id="start_name" name="session" required minlength="5"/>
-            <input type="submit" id="start_submit" value="Start Session" />
-        </form>
+    <h2>Use a stateless webserver, but no html (like in a JS library)</h2>
+    <div class="button_rec">
+        <button id="session_start">
+            Still need to trigger the process.  So click to start.
+        </button>
     </div>
-    </section>
-    <section data-section="resp">
-        <div class="rec">
-            <form id="session_reply">
-                <label for="reply_name">Matchmaking Name</label>
-                <input type="text" id="reply_name" name="session" required minlength="5"/>
-                <input type="submit" id="reply_submit"  value="Start Session" />
-            </form>
-        </div>
-    </section>
+    <div class="button_rec">
+        <button id="session_reply">
+            Or click here to answer.
+        </button>
+    </div>
     <section id="city_chat" class="hide">
-        
+        <button id="send_message">
+            Yeah, this is html too.  Sue me.
+        </button>
     </section>
 </div>
-<script type="text/javascript" data-name="menu_junk">
-    
-    var links = document.querySelectorAll('li[data-section]');
-    var addClick = function(i){
-        links.item(i).addEventListener('click', function(e){
-            for (var j = 0; j < links.length; ++j){
-                var selector = "section[data-section='" +
-                    links.item(j).dataset['section'] + "']";
-                var section = document.querySelector(selector);
-                var link = links.item(j); 
-                if (j != i){
-                    link.classList.remove('selected');
-                    section.classList.remove('selected');
-                } else {
-                    link.classList.add('selected');
-                    section.classList.add('selected');
-                }
-            }
-        });
-    };
-    for (var i = 0; i < links.length; ++i){
-        addClick(i)
-    }
-</script>
 <script type="text/javascript" data-name="web_rtc_stuff"> 
     var main_div = document.getElementById('main');
     var city_chat = document.getElementById('city_chat');
+    var send_message = document.getElementById('send_message');
 
     var recMessage = function (data) {
         var msg = document.createElement('span');
@@ -81,34 +48,46 @@
         city_chat.appendChild(document.createElement('br'));
         city_chat.appendChild(msg);
     };
-
-    var start_form = document.getElementById('session_start');
-    start_form.addEventListener('submit', function (e) {
-        e.preventDefault();
-    });
-    start_form.addEventListener('submit', function start_submit(e){
-        if (this.checkValidity()){
-            start_form.removeEventListener('submit', start_submit);
-            start_form.children.namedItem('start_submit').disabled = true;
-            var name = this.elements.namedItem('session').value;
-            var dataFestivusConnection = new DataFestivus();
-            dataFestivusConnection.start(new PollSideBand(name));
-            dataFestivusConnection.addMessageListener(recMessage);
+    
+    var getMatchName = function(){
+        var matchName = '';
+        while (matchName.length < 5){
+            matchName = prompt('Enter a match name (5 or more characters', matchName);
+            if (matchName == null){
+                break;
+            }
         }
-    });
+        if (!matchName) {
+            return;
+        }
+        return matchName;
+    };
+    
+    var start_butt = document.getElementById('session_start');
     var reply_form = document.getElementById('session_reply');
-    reply_form.addEventListener('submit', function (e) {
-        e.preventDefault();
-    });
-    reply_form.addEventListener('submit', function answer_submit(e){
-        if (this.checkValidity()){
-            reply_form.removeEventListener('submit', answer_submit);
-            reply_form.children.namedItem('reply_submit').disabled = true;
-            var name = this.elements.namedItem('session').value;
-            var dataFestivusConnection = new DataFestivus();
-            dataFestivusConnection.reply(new PollSideBand(name));
-            dataFestivusConnection.addMessageListener(recMessage);
+    start_butt.addEventListener('click', function start_submit(e){
+        var matchName = getMatchName();
+        if (!matchName){
+            return;
         }
+        
+        start_butt.removeEventListener('submit', start_submit);
+        
+        var dataFestivusConnection = new DataFestivus();
+        dataFestivusConnection.start(new PollSideBand(matchName));
+        dataFestivusConnection.addMessageListener(recMessage);
+        
+    });
+    
+    reply_form.addEventListener('submit', function answer_submit(e){
+        var matchName = getMatchName();
+        if (!matchName){
+            return;
+        }
+        reply_form.removeEventListener('submit', answer_submit);
+        var dataFestivusConnection = new DataFestivus();
+        dataFestivusConnection.reply(new PollSideBand(matchName));
+        dataFestivusConnection.addMessageListener(recMessage);
     });
     
     var PollSideBand = function(name){

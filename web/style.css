@@ -134,3 +134,9 @@ section[data-section]{
 section[data-section].selected{
     display: block;
 }
+
+.button_rec {
+    clear: both;
+    display: block;
+    margin: 20px;
+}
