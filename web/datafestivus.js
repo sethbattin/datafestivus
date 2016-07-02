@@ -102,7 +102,7 @@
     DataFestivus.ConnectionModel = ConnectionModel;
 
     // a prototypical implementation of the "side-band" communication for WebRTC
-    var SideBand = function(){
+    var SideBand = DataFestivus.SideBand = function(){
         // functions to-be-overridden in useful implementations
         this.onsave = function(connectionModelData){
             IO.log("(not) saving connection model:", connectionModelData);
@@ -126,7 +126,6 @@
     SideBand.prototype.onupdate = function(connectionModel){
         IO.log("received updated model json:", connectionModelJson);
     };
-    DataFestivus.SideBand = SideBand;
 
     var init = null;
     
