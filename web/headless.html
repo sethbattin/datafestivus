@@ -79,12 +79,12 @@
         
     });
     
-    reply_form.addEventListener('submit', function answer_submit(e){
+    reply_form.addEventListener('click', function answer_submit(e){
         var matchName = getMatchName();
         if (!matchName){
             return;
         }
-        reply_form.removeEventListener('submit', answer_submit);
+        reply_form.removeEventListener('click', answer_submit);
         var dataFestivusConnection = new DataFestivus();
         dataFestivusConnection.reply(new PollSideBand(matchName));
         dataFestivusConnection.addMessageListener(recMessage);

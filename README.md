@@ -14,7 +14,7 @@ But seriously, this is a webRTC wrapper for data packet exchange.  Sending audio
 
 ### Sideband Requirements
 
-`begin`
+`begin` - See [github Issue #2](https://github.com/sethbattin/datafestivus/issues/2) - begin must differentiate offer and answer by whether `sideBand.isStarted` is set to true
 
 ## Goals
 This project aims to create a stateless storage system on a server that can facilitate a peer-to-peer connection in WebRTC.  It also implements a WebRTC app that demonstrates its usefulness.  The reason for the server application is:

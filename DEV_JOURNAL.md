@@ -119,3 +119,8 @@ Along the way, I elected to make unit tests for the silly server.  It surely see
 The tests themselves turned out to be quite helpful.  After thoroughly proving that the server was operating as intended, (and cleaning up the architecture to make that testable and hence obvious,) I knew that the problems I was encountering in the page javascript were purely problems in the javascript.  That made them incredibly easy to debug, and the JS refactoring took almost no time at all.  I say almost because I think that Chrome is blatantly not performing WebRTC functions.  I updated Firefox and it performed perfectly.  Perhaps I'll simply need to install 64bit linux so that I can keep getting Chrome updates.
 
 From here, I move on to cleaning up my repo, making my tests correct, and possibly updating my public hosting to make another attempt at world-wide connections.  Cross my fingers.  If that works, it's on to implementing a game library wrapper.
+
+## 2016 July 2
+I am attempting to resolve longstanding poor design elements of the framework.  I started by attempting to create a "headless" (lacking html driver elements) example implementation.  I ran into difficulties, and decided to attempt to document the usage instructions for the library with the hope that that would reveal the problems in doing so.  I did the latter, and completed the former.
+
+The eventual goal was to create an implementation suitable for use as a communication system for my library [gameloop].  So from my current point, I am going to try to re-implement the headless server as a gameloop example.
