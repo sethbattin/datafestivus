@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Data Festivus</title>
+    <link rel="stylesheet" href="style.css" />
+    <script type="text/javascript" src="datafestivus.js"></script>
+    <script type="text/javascript" >
+        // neither BitBucket nor GitHub likes being a CDN, so inline some stuff 
+        // see https://bitbucket.org/sbattin/gameloop
+        
+        // see bitbucket.org/sbattin/gameloop/raw/master/js/loop.js        
+        function GameLoop(t){function e(t){this.message=t,this.name="GameException"}function n(t){var e=t-h;h=t,e%=2*v;for(var n=0;n<w.length;n++)w[n].update(r,e,t)}function i(t){var e=t-l;l=t;for(var n=0;n<p.length;n++)"function"==typeof r.save&&r.save(),p[n].draw(r,e,t),"function"==typeof r.restore&&r.restore()}var a=this,o=t,r=null,u=function(t){r=t};this.setDrawContext=u,this.getDrawContext=function(){return r};var d=!1,f=[];this.onInit=function(t){f.push(t)};var s=function(){for(var t=0;t<f.length;t++)f[t].call(a)};if(this.initialize=function(){if(null==r&&("string"==typeof o&&(o=document.getElementById(t)),o.getContext)){var e=o.getContext("2d");u(e)}!function(t){var e=window.requestAnimationFrame||window.mozRequestAnimationFrame||window.webkitRequestAnimationFrame||window.msRequestAnimationFrame||function(e){return t.setTimeOut(e,33)};t.requestAnimationFrame=e}(window);var a=function(t){d&&(n(t),i(t)),requestAnimationFrame(a)};window.requestAnimationFrame(a),d=!0,s()},"complete"==document.readyState)this.initialize();else{var c=this,m=document.onreadystatechange;document.onreadystatechange=function(){"function"==typeof m&&m(),"complete"==document.readyState&&c.initialize()}}var h=0,l=0,w=[],p=[],v=33;return this.addItem=function(t){t&&("function"==typeof t.draw&&this.addDrawable(t),"function"==typeof t.update&&this.addUpdateable(t))},this.addUpdateable=function(t){if(!t||!t.update||"function"!=typeof t.update)throw new e("invalid updateable object added.");return w.push(t),w.length},this.addDrawable=function(t){if(!t||!t.draw||"function"!=typeof t.draw)throw new e("invalid drawable object added.");return p.push(t),p.length},this.remove=function(t){for(var e=0;e<p.length;++e)if(p[e]===t){p.splice(e,1);break}for(var e=0;e<w.length;++e)if(w[e]===t){w.splice(e,1);break}},this}
+        
+        // bitbucket.org/sbattin/gameloop/raw/master/js/bases/input.js
+        function UIRegion(t,n,e,i){this.x=t,this.y=n,this.w=e,this.h=i}var GLInput={};GLInput.keyboard=new function(t){this.keys={};var n="key";this.getKeyProperty=function(){return n};var e=this;t.addEventListener("keydown",function i(e){for(var u=["key","which","keyCode"],o=n;!e.hasOwnProperty(o)&&(o=u.shift(),0!=u.length););n=o,t.removeEventListener("keydown",i)}),t.addEventListener("keydown",function(t){e.keys[t[n]]=!0}),t.addEventListener("keyup",function(t){e.keys[t[n]]=!1}),this.isKeyDown=function(t){return e.keys[t]},this.isPushed=this.isKeyDown,this.anyKey=function(){for(var t in this.keys)if(this.keys[t])return!0}}(document),GLInput.mouse=new function(){var t=1,n=1,e=function(e){return{x:t*e.offsetX,y:n*e.offsetY}};document.addEventListener("mousemove",function g(i){"offsetX"in i||(e=function(e){var i=e.clientX,u=e.clientY,o=e.target.getBoundingClientRect();return{x:t*(i-o.left),y:n*(u-o.top)}}),document.removeEventListener("mousemove",g)});var i=null;this.position={x:-1,y:-1};var u=!1,o=this;this.getPosition=function(){if("undefined"==typeof this.position.x);return this.position},this.isTracking=function(){return u},this.getIsWithinUI=function(t){return this.isTracking()&&t.contains(this.getPosition())};var s=function(t){u=!0},r=function(t){u=!1,o.position={x:-1,y:-1}},a=function(t){o.isTracking()&&(o.position=e(t))},h={},c=function(t){u&&(h[t.which]=!0)},d=function(t){h[t.which]=!1},p=function(t){};document.addEventListener("mouseup",d),document.addEventListener("mousedown",c);var f=function(){null!==i&&(i.addEventListener("click",p),i.addEventListener("mouseover",s),i.addEventListener("mouseout",r),i.addEventListener("mousemove",a))},m=function(){null!==i&&(i.removeEventListener("click",p),i.removeEventListener("mouseover",s),i.removeEventListener("mouseout",r),i.removeEventListener("mousemove",a))};this.setViewPort=function(e){m(),i=e,t=e.width/e.clientWidth,n=e.height/e.clientHeight,f()},this.hasViewport=function(){return null!==i},this.isPushed=function(t){return t in h&&h[t]},this.anyButton=function(){for(var t in h)if(h[t])return!0;return!1}},GLInput.gamepad=new function(t,n,e){var i=null,u="",o=0,s=0;n.addEventListener("gamepadconnected",function(t){GLInput.gamepad.update(),GLInput.gamepad.onConnect(t)}),n.addEventListener("gamepaddisconnected",function(t){i==t.gamepad.index&&(i=null,u="",o=0,s=0),GLInput.gamepad.onDisconnect(t)}),this.exists=function(){return"function"==typeof t.getGamepads&&this.hasGamepad()};var r;this.update=function(){if(r=t.getGamepads(),!this.hasGamepad())for(var n=0;n<r.length;++n)r[n]&&(i=n,u=r[n].id,o=r[n].axes.length,s=r[n].buttons.length)},this.hasGamepad=function(){return null!==i&&r.hasOwnProperty(i)},this.getGamepad=function(){return this.hasGamepad()?r[i]:null},this.getAxis=function(t){return this.hasGamepad()&&o>t?this.getGamepad().axes[t]:0},this.isPushed=function(t){return this.hasGamepad()&&s>t?this.getGamepad().buttons[t].pressed:!1},this.anyButton=function(){if(this.hasGamepad())for(var t=this.getGamepad(),n=0;n<t.buttons.length;++n)if(t.buttons[n].pressed)return!0;return!1};var a={connect:[],disconnect:[]};this.addListener=function(t,n,e){("connect"==t||"disconnect"==t)&&a[t].push({func:n,context:e})},this.addListener("connect",function(t){this.log("gamepad connected.",t)},e),this.addListener("disconnect",function(t){this.log("gamepad disconnected.",t)},e),this.onConnect=function(t){for(var n in a.connect){var e=a.connect[n];e.func.call(e.context,t)}},this.onDisconnect=function(t){for(var n in a.disconnect){var e=a.disconnect[n];e.func.call(e.context,t)}},n.requestAnimationFrame(function h(){n.requestAnimationFrame(h),GLInput.gamepad.update()})}(navigator,window,console),GLInput.touch=new function(t,n,e){var i=function(t){var n=t.clientX,e=t.clientY,i=t.target.getBoundingClientRect();return{x:Math.round(n-i.left),y:Math.round(e-i.top)}};this.exists=function(){return"ontouchstart"in n};var u=[];this.getIsWithinUI=function(t){for(var n=!1,e=0;e<u.length;++e)if(t.contains(u[e].offset)){n=!0;break}return n},this.anyTouch=function(){return!!u.length},this.getTouchCount=function(){return u.length},this.getFirstTouchPosition=function(){return this.anyTouch()?this.getPosition(u[0].identifier):{x:-1,y:-1}};var o=function(t){t.preventDefault();for(var n=t.changedTouches,e=0;e<n.length;++e)n[e].offset=i(n[e]),u.push(n[e])},s=function(t){for(var n=t.changedTouches,e=0;e<n.length;++e)for(var i=0;i<u.length;++i)u[i].identifier==n[e].identifier&&(u.splice(i,1),--i)},r=function(t){t.preventDefault();for(var n=t.changedTouches,e=0;e<n.length;++e)for(var o=0;o<u.length;++o)u[o].identifier==n[e].identifier&&(u[o].offset=i(n[e]))},a=function(){null!==c&&(c.addEventListener("touchstart",o),c.addEventListener("touchend",s),c.addEventListener("touchmove",r))},h=function(){null!==c&&(c.removeEventListener("touchstart",o),c.removeEventListener("touchend",s),c.removeEventListener("touchmove",r))};n.addEventListener("touchend",s);var c=null;this.setViewPort=function(t){h(),c=t,a()},this.hasViewport=function(){return null!==c};var d=function(t){for(var n=0;n<u.length;++n)if(u[n].identifier==t)return u[n];return null};this.getPosition=function(t){var n=d(t);return n?n.offset:{x:-1,y:-1}},this.isPushed=function(t){return!!d(t)}}(navigator,window,console),UIRegion.prototype.contains=function(t){return t.x>this.x&&t.x<this.x+this.w&&t.y>this.y&&t.y<this.y+this.h},UIRegion.prototype.center=function(){return{x:this.x+this.w/2,y:this.y+this.h/2}};var Input=function(){var t={mouse:GLInput.mouse,keyboard:GLInput.keyboard,gamepad:GLInput.gamepad,touch:GLInput.touch},n={},e={},i={},u={},o={},s={},r={};this.getPointer=function(){return t.mouse},this.setUI=function(t,n,e){if(e||(e=[]),"function"!=typeof n.contains)throw"invalid";o[t]={region:n,buttons:e}},this.removeUI=function(t){delete o[t],delete s[t],delete r[t]},this.setAxisId=function(e,i,u,o){t.hasOwnProperty(i)&&(n[e]={type:i,id:u,id2:o})},this.setButtonId=function(n,i,u){t.hasOwnProperty(i)&&(e[n]={type:i,id:u})},this.getAxis=function(e,i){var u=0,o=n[e].type;switch(o){case"mouse":case"touch":if(t[o].isTracking(n[e].id)){var s=t[o].getPosition(n[e].id),r=n[e].id,a="x"==r?"y":"x",h=s[r]-i[r],c=0>h?-1:1,d=s[a]-i[a];u=c*Math.sqrt(h*h/(h*h+d*d))}break;case"keyboard":var p=n[e].id,f=n[e].id2;t.keyboard.isKeyDown(f)&&(u-=1),t.keyboard.isKeyDown(p)&&(u+=1);break;case"gamepad":u=t.gamepad.getAxis(n[e].id)}return u},this.isButtonDown=function(t){return u.hasOwnProperty(t)&&u[t]},this.newButtonPush=function(t){return u.hasOwnProperty(t)&&u[t]&&!i[t]},this.isUIOver=function(t){return s.hasOwnProperty(t)&&s[t]},this.isUIPush=function(t){var n=!1;if(s.hasOwnProperty(t)&&o[t].buttons.length)for(var i=0;i<o[t].buttons.length;++i)if(this.isButtonDown(o[t].buttons[i])){var u=e[o[t].buttons[i]].type;if("keyboard"==u||"gamepad"==u?n=!0:("mouse"==u||"touch"==u)&&(n=this.isUIOver(t)),n)break}return n},this.anyPress=function(){return t.keyboard.anyKey()||t.gamepad.anyButton()||t.mouse.anyButton()||t.touch.anyTouch()},this.has=function(n){switch(n){case"keyboard":return!0;case"mouse":return!0;case"touch":return t.touch.exists();case"gamepad":return t.gamepad.exists();default:return!1}};var a=function(){for(var n in e)i[n]=u[n],u[n]=t[e[n].type].isPushed(e[n].id)},h=function(){for(var n in o)r[n]=s[n],s[n]=t.mouse.getIsWithinUI(o[n].region)||t.touch.getIsWithinUI(o[n].region)};this.update=function(n,e,i){t.mouse.hasViewport()||t.mouse.setViewPort(n.canvas),t.touch.hasViewport()||t.touch.setViewPort(n.canvas),a(),h()}},GameInput=function(){this.input=new Input,this.getInput=function(){return this.input}};GameInput.prototype.update=function(t,n,e){this.getInput().update(t,n,e)},GameInput.prototype.anyPress=function(){return this.getInput().anyPress()},GameInput.prototype.getPointer=function(){return this.getInput().getPointer().getPosition()};var nullInput=function(){this.getX=function(){return 0},this.getY=function(){return 0},this.isShooting=function(){return!1},this.update=function(t,n,e){}},MenuInput=function(){var t=0;this.canMove=function(n){return t-=n,t=Math.max(t,0),0>=t},this.menuMove=function(n){t+=n},this.menuThreshold=.75,this.menuDelay=300,this._up=!1,this._down=!1,this._select=!1,this.getInput().setAxisId("menuupdown","keyboard",40,38),this.getInput().setAxisId("menuupdown2","gamepad",1),this.getInput().setAxisId("menuupdown3","gamepad",3),this.getInput().setAxisId("menuupdown4","gamepad",5),this.getInput().setButtonId("menuselect1","keyboard",13),this.getInput().setButtonId("menuselect2","keyboard",32),this.getInput().setButtonId("menuselect3","gamepad",0),this.getInput().setButtonId("menuclick","mouse",1),this.getInput().setButtonId("menuback1","keyboard",27),this.getInput().setButtonId("menuback2","gamepad",1)};MenuInput.prototype=new GameInput,MenuInput.constructor=MenuInput,MenuInput.prototype.update=function(t,n,e){GameInput.prototype.update.call(this,t,n,e),this.menuUpdate(n)},MenuInput.prototype.menuUpdate=function(t){if(!this.canMove(t))return this._down=!1,this._up=!1,void(this._select=!1);this.getInput().newButtonPush("menuselect1")||this.getInput().newButtonPush("menuselect2")||this.getInput().newButtonPush("menuselect3")?(this.menuMove(this.menuDelay),this._select=!0):this._select=!1;var n=this.getInput().getAxis("menuupdown")+this.getInput().getAxis("menuupdown2")+this.getInput().getAxis("menuupdown3")+this.getInput().getAxis("menuupdown4");n>=this.menuThreshold?(this._down=!0,this.menuMove(this.menuDelay)):this._down=!1,n<=-1*this.menuThreshold?(this._up=!0,this.menuMove(this.menuDelay)):this._up=!1},MenuInput.prototype.menuDown=function(){return this._down},MenuInput.prototype.menuUp=function(){return this._up},MenuInput.prototype.menuSelect=function(){return this._select},MenuInput.prototype.menuClick=function(){return this.getInput().newButtonPush("menuclick")},MenuInput.prototype.menuBack=function(){return this.getInput().newButtonPush("menuback1")||this.getInput().newButtonPush("menuback2")};
+
+        // see bitbucket.org/sbattin/gameloop/raw/master/js/components/clear.js
+        function Clear(t){return"undefined"!=typeof t?this.color=t:this.color=null,this.draw=function(t,l,e){var r=t.canvas.width,i=t.canvas.height;t.setTransform(1,0,0,1,0,0),null==this.color?t.clearRect(0,0,r,i):(t.save(),t.fillStyle=this.color,t.fillRect(0,0,r,i),t.restore())},this}
+        
+
+    </script>
+    <style rel="stylesheet" type="text/css">
+    </style>
+</head>
+<body>
+<header>
+    <h1>WebRTC for the Rest of Us</h1>
+    <p>Because Mozilla and Google seem to think everyone wants to build their own video chat app.  But the rest of us don't care about that.</p>
+    <nav><ul class="inline">
+        <li><a href="index.html">Main</a></li>
+        <li><a href="manual.html">Manual</a></li>
+        <li><a href="server.html">Server</a></li>
+        <li><a href="headless.html">HTML-free</a></li>
+        <li><a href="game.html">Multiplayer Game</a></li>
+    </ul></nav>
+</header>
+<div id="main">
+    <h1>Here's a game</h1>
+    <canvas id="game" height="225" width="400"></canvas>
+</div>
+<script type="text/javascript">
+    // TODO: move this into gameloop itself
+    GameLoop.Network = function (){
+
+        var getMatchName = function(){
+            var matchName = '';
+            while (matchName.length < 5){
+                matchName = prompt(
+                        'Enter a match name (5 or more characters', matchName);
+                if (matchName == null){
+                    break;
+                }
+            }
+            if (!matchName) {
+                return;
+            }
+            return matchName;
+        };
+        
+        this.offer = function(){ alert("making an offer!");};
+        this.answer = function() {alert("answering an offer!");}
+    };
+</script>
+<script type="text/javascript">
+    
+    
+    
+    var loop = new GameLoop('game'); 
+    
+    var input = new GameInput();
+    input.getInput().setButtonId('lclick', 'mouse', 1);
+    input.getInput().setUI('offer', new UIRegion(50, 100, 150, 50), ['lclick']);
+    input.getInput().setUI('region', new UIRegion(50, 200, 150, 50), ['lclick']);
+
+    var game = {
+        state: 'new',
+        clear: new Clear('white'),
+        input: input,
+        network: new GameLoop.Network(),
+        timestamp: 0,
+        update: function(context, timediff, timestamp){
+            this.timestamp = timestamp;
+            this.input.update(context, timediff, timestamp);
+            if (this.state == 'new'){
+                if (this.input.newButtonPush('offer')){
+                    network.offer();
+                } else if (this.input.newButtonPush('answer')) {
+                    network.answer();
+                }
+            }
+        },
+        draw: function(context, timediff, timestamp){
+            this.clear.draw(context, timediff, timestamp);
+            context.fillText('hello ' + this.timestamp, 50, 50);
+        }
+    };
+    loop.addItem(game);
+</script>
+</body>
+</html>
